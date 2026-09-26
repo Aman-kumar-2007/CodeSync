@@ -101,16 +101,15 @@ function AuthPage({ onLogin }) {
     }
 
     const handleGoogleLogin = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { data, error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
                 redirectTo: window.location.origin,
             },
-        })
+        });
 
         if (error) {
-            console.error("Google login error:", error)
-            alert(error.message)
+            console.error("OAuth error:", error);
         }
     }
 

@@ -16,7 +16,10 @@ const authRoutes = require("./routes/auth.routes")
 
 const {
     startPlatformSyncJob,
+    runPlatformSync,
 } = require("./jobs/platformSync.job")
+
+runPlatformSync()
 
 const app = express()
 

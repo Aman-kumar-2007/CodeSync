@@ -879,37 +879,47 @@ function Analytics() {
                     )
                 }
 
-                const response = await fetch(
-                    "http://localhost:5001/api/analytics",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${session.access_token}`,
-                        },
-                    }
-                )
+                const headers = {
+                    Authorization: `Bearer ${session.access_token}`,
+                }
 
-                const result = await response.json()
+                // Run both requests together
+                const [
+                    analyticsResponse,
+                    leaderboardResponse,
+                ] = await Promise.all([
+                    fetch(
+                        "http://localhost:5001/api/analytics",
+                        {
+                            headers,
+                        }
+                    ),
 
-                if (!response.ok || !result.success) {
+                    fetch(
+                        "http://localhost:5001/api/leaderboard",
+                        {
+                            headers,
+                        }
+                    ),
+                ])
+
+                const [
+                    analyticsResult,
+                    leaderboardResult,
+                ] = await Promise.all([
+                    analyticsResponse.json(),
+                    leaderboardResponse.json(),
+                ])
+
+                if (
+                    !analyticsResponse.ok ||
+                    !analyticsResult.success
+                ) {
                     throw new Error(
-                        result.message ||
+                        analyticsResult.message ||
                         "Failed to load analytics."
                     )
                 }
-
-                setAnalytics(result.data)
-
-                const leaderboardResponse = await fetch(
-                    "http://localhost:5001/api/leaderboard",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${session.access_token}`,
-                        },
-                    }
-                )
-
-                const leaderboardResult =
-                    await leaderboardResponse.json()
 
                 if (
                     !leaderboardResponse.ok ||
@@ -921,11 +931,20 @@ function Analytics() {
                     )
                 }
 
+                setAnalytics(
+                    analyticsResult.data
+                )
+
                 setGlobalRank({
-                    rank: leaderboardResult.data.currentUserRank,
+                    rank:
+                        leaderboardResult.data
+                            .currentUserRank,
+
                     total:
-                        leaderboardResult.data.leaderboard?.length || 0,
+                        leaderboardResult.data
+                            .leaderboard?.length || 0,
                 })
+
             } catch (error) {
                 console.error(
                     "Analytics fetch error:",
@@ -933,6 +952,7 @@ function Analytics() {
                 )
 
                 setError(error.message)
+
             } finally {
                 setLoading(false)
             }
@@ -940,6 +960,7 @@ function Analytics() {
 
         fetchAnalytics()
     }, [])
+    
 
     if (loading) {
         return <AnalyticsLoading />

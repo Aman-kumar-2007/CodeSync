@@ -26,13 +26,169 @@ const API_BASE_URL = "http://localhost:5001"
 function App() {
     const [currentPage, setCurrentPage] = useState("login")
     const [activePage, setActivePage] = useState("Dashboard")
+
     const [profile, setProfile] = useState(null)
     const [profileLoading, setProfileLoading] = useState(true)
+
+    /* ========================================================= */
+    /* CACHE KEY                                                 */
+    /* ========================================================= */
+
+    const getProfileCacheKey = (userId) => {
+        return `codesync_profile_${userId}`
+    }
+
+    /* ========================================================= */
+    /* LOAD INSTANT PROFILE                                      */
+    /* ========================================================= */
+
+    const loadInstantProfile = async (user) => {
+        if (!user?.id) return null
+
+        const cacheKey = getProfileCacheKey(user.id)
+
+        /* ----------------------------------------------------- */
+        /* 1. LOCAL STORAGE CACHE                               */
+        /* ----------------------------------------------------- */
+
+        try {
+            const cachedProfile =
+                localStorage.getItem(cacheKey)
+
+            if (cachedProfile) {
+                const parsedProfile =
+                    JSON.parse(cachedProfile)
+
+                if (parsedProfile) {
+                    setProfile(parsedProfile)
+                }
+            }
+        } catch (error) {
+            console.warn(
+                "Profile cache read failed:",
+                error
+            )
+        }
+
+        /* ----------------------------------------------------- */
+        /* 2. AUTH USER METADATA                                 */
+        /* ----------------------------------------------------- */
+
+        const metadata = user.user_metadata || {}
+
+        const metadataName =
+            metadata.full_name ||
+            metadata.fullName ||
+            metadata.name ||
+            null
+
+        const metadataAvatar =
+            metadata.avatar_url ||
+            metadata.avatar ||
+            null
+
+        if (metadataName) {
+            setProfile((previous) => ({
+                ...(previous || {}),
+                userId: user.id,
+                name: metadataName,
+                avatar:
+                    previous?.avatar ||
+                    metadataAvatar ||
+                    null,
+                username:
+                    previous?.username ||
+                    null,
+            }))
+        }
+
+        /* ----------------------------------------------------- */
+        /* 3. SMALL DIRECT PROFILE QUERY                        */
+        /* ----------------------------------------------------- */
+
+        try {
+            const {
+                data: studentProfile,
+                error,
+            } = await supabase
+                .from("student_profiles")
+                .select(
+                    "full_name, branch, profile_image"
+                )
+                .eq("user_id", user.id)
+                .maybeSingle()
+
+            if (error) {
+                console.warn(
+                    "Instant profile query failed:",
+                    error.message
+                )
+
+                return
+            }
+
+            if (!studentProfile) {
+                return
+            }
+
+            const instantProfile = {
+                ...(profile || {}),
+                userId: user.id,
+                name:
+                    studentProfile.full_name ||
+                    metadataName ||
+                    "Student",
+                avatar:
+                    studentProfile.profile_image ||
+                    metadataAvatar ||
+                    null,
+                branch:
+                    studentProfile.branch ||
+                    null,
+            }
+
+            setProfile((previous) => ({
+                ...(previous || {}),
+                ...instantProfile,
+            }))
+
+            /* Cache only the small profile data */
+            try {
+                localStorage.setItem(
+                    cacheKey,
+                    JSON.stringify(instantProfile)
+                )
+            } catch (error) {
+                console.warn(
+                    "Profile cache write failed:",
+                    error
+                )
+            }
+        } catch (error) {
+            console.warn(
+                "Instant profile loading failed:",
+                error
+            )
+        }
+    }
+
+    /* ========================================================= */
+    /* AUTHENTICATED USER                                       */
+    /* ========================================================= */
+
     const handleAuthenticatedUser = async (session) => {
         if (!session?.user) {
             setCurrentPage("login")
+            setProfile(null)
             return
         }
+
+        /*
+         * IMPORTANT:
+         * Load name/profile immediately.
+         * Do NOT wait for the heavy dashboard API.
+         */
+        loadInstantProfile(session.user)
 
         const { data, error } = await supabase
             .from("users")
@@ -41,7 +197,10 @@ function App() {
             .single()
 
         if (error) {
-            console.error("Profile status error:", error)
+            console.error(
+                "Profile status error:",
+                error
+            )
             return
         }
 
@@ -53,7 +212,7 @@ function App() {
     }
 
     /* ========================================================= */
-    /* FETCH DASHBOARD PROFILE                                   */
+    /* FETCH FULL DASHBOARD PROFILE                              */
     /* ========================================================= */
 
     useEffect(() => {
@@ -62,7 +221,12 @@ function App() {
         }
 
         const fetchProfile = async () => {
+            /*
+             * Sidebar already has cached/minimal profile.
+             * This loading state is ONLY for dashboard content.
+             */
             setProfileLoading(true)
+
             try {
                 const {
                     data: {
@@ -137,9 +301,33 @@ function App() {
                         data.activity || [],
                 }
 
-                setProfile(
-                    normalizedProfile
-                )
+                /* ------------------------------------------------ */
+                /* UPDATE PROFILE                                   */
+                /* ------------------------------------------------ */
+
+                setProfile(normalizedProfile)
+
+                /* ------------------------------------------------ */
+                /* UPDATE CACHE                                     */
+                /* ------------------------------------------------ */
+
+                if (session.user?.id) {
+                    try {
+                        localStorage.setItem(
+                            getProfileCacheKey(
+                                session.user.id
+                            ),
+                            JSON.stringify(
+                                normalizedProfile
+                            )
+                        )
+                    } catch (error) {
+                        console.warn(
+                            "Profile cache update failed:",
+                            error
+                        )
+                    }
+                }
             } catch (error) {
                 console.error(
                     "Dashboard profile error:",
@@ -154,7 +342,7 @@ function App() {
     }, [currentPage])
 
     /* ========================================================= */
-    /* AUTH INITIALIZATION                                       */
+    /* AUTH INITIALIZATION                                      */
     /* ========================================================= */
 
     useEffect(() => {
@@ -169,6 +357,8 @@ function App() {
                 await handleAuthenticatedUser(
                     session
                 )
+            } else {
+                setProfileLoading(false)
             }
         }
 
@@ -181,17 +371,19 @@ function App() {
         } = supabase.auth.onAuthStateChange(
             (event, session) => {
                 if (session) {
-                    setTimeout(() => {
-                        handleAuthenticatedUser(
-                            session
-                        )
-                    }, 0)
+                    /*
+                     * No need to block rendering.
+                     */
+                    handleAuthenticatedUser(
+                        session
+                    )
                 } else if (
                     event === "SIGNED_OUT"
                 ) {
                     setCurrentPage("login")
                     setActivePage("Dashboard")
                     setProfile(null)
+                    setProfileLoading(false)
                 }
             }
         )
@@ -202,7 +394,7 @@ function App() {
     }, [])
 
     /* ========================================================= */
-    /* LOGIN                                                      */
+    /* LOGIN                                                     */
     /* ========================================================= */
 
     const handleLogin = async () => {
@@ -218,7 +410,7 @@ function App() {
     }
 
     /* ========================================================= */
-    /* PROFILE SETUP                                              */
+    /* PROFILE SETUP                                             */
     /* ========================================================= */
 
     const handleSetupComplete = () => {
@@ -226,7 +418,47 @@ function App() {
     }
 
     /* ========================================================= */
-    /* AUTH PAGES                                                 */
+    /* LOGOUT                                                    */
+    /* ========================================================= */
+
+    const handleLogout = async () => {
+        try {
+            const {
+                data: {
+                    session,
+                },
+            } = await supabase.auth.getSession()
+
+            if (session?.user?.id) {
+                try {
+                    localStorage.removeItem(
+                        getProfileCacheKey(
+                            session.user.id
+                        )
+                    )
+                } catch (error) {
+                    console.warn(
+                        "Profile cache cleanup failed:",
+                        error
+                    )
+                }
+            }
+
+            await supabase.auth.signOut()
+
+            setCurrentPage("login")
+            setActivePage("Dashboard")
+            setProfile(null)
+        } catch (error) {
+            console.error(
+                "Logout error:",
+                error
+            )
+        }
+    }
+
+    /* ========================================================= */
+    /* AUTH PAGES                                                */
     /* ========================================================= */
 
     if (currentPage === "login") {
@@ -246,13 +478,18 @@ function App() {
             />
         )
     }
+
+    /* ========================================================= */
+    /* DASHBOARD LOADING                                         */
+    /* ========================================================= */
+
     function DashboardLoading() {
         return (
             <div className="min-h-screen bg-background animate-pulse">
-
                 <div className="space-y-8 p-8">
 
                     {/* Profile Header */}
+
                     <div className="h-[185px] rounded-2xl border border-border bg-card p-8">
 
                         <div className="h-8 w-72 rounded bg-muted" />
@@ -268,57 +505,75 @@ function App() {
                     </div>
 
                     {/* Quick Stats */}
+
                     <div className="flex flex-wrap gap-3">
 
-                        {[1, 2, 3, 4].map((item) => (
-                            <div
-                                key={item}
-                                className="h-[44px] w-[220px] rounded-full border border-border bg-card"
-                            />
-                        ))}
+                        {[1, 2, 3, 4].map(
+                            (item) => (
+                                <div
+                                    key={item}
+                                    className="h-[44px] w-[220px] rounded-full border border-border bg-card"
+                                />
+                            )
+                        )}
 
                     </div>
 
                     {/* Platform Cards */}
+
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
 
-                        {[1, 2, 3].map((item) => (
-                            <div
-                                key={item}
-                                className="h-[230px] rounded-2xl border border-border bg-card p-6"
-                            >
-                                <div className="flex items-center justify-between">
+                        {[1, 2, 3].map(
+                            (item) => (
+                                <div
+                                    key={item}
+                                    className="h-[230px] rounded-2xl border border-border bg-card p-6"
+                                >
 
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-11 w-11 rounded-xl bg-muted" />
+                                    <div className="flex items-center justify-between">
 
-                                        <div className="h-5 w-28 rounded bg-muted" />
+                                        <div className="flex items-center gap-3">
+
+                                            <div className="h-11 w-11 rounded-xl bg-muted" />
+
+                                            <div className="h-5 w-28 rounded bg-muted" />
+
+                                        </div>
+
+                                        <div className="h-4 w-24 rounded bg-muted" />
+
                                     </div>
 
-                                    <div className="h-4 w-24 rounded bg-muted" />
+                                    <div className="mt-8 flex justify-between">
+
+                                        <div>
+
+                                            <div className="h-10 w-20 rounded bg-muted" />
+
+                                            <div className="mt-3 h-3 w-28 rounded bg-muted" />
+
+                                        </div>
+
+                                        <div className="w-[140px] space-y-3">
+
+                                            <div className="h-2 rounded bg-muted" />
+
+                                            <div className="h-2 rounded bg-muted" />
+
+                                            <div className="h-2 rounded bg-muted" />
+
+                                        </div>
+
+                                    </div>
 
                                 </div>
-
-                                <div className="mt-8 flex justify-between">
-
-                                    <div>
-                                        <div className="h-10 w-20 rounded bg-muted" />
-                                        <div className="mt-3 h-3 w-28 rounded bg-muted" />
-                                    </div>
-
-                                    <div className="w-[140px] space-y-3">
-                                        <div className="h-2 rounded bg-muted" />
-                                        <div className="h-2 rounded bg-muted" />
-                                        <div className="h-2 rounded bg-muted" />
-                                    </div>
-
-                                </div>
-                            </div>
-                        ))}
+                            )
+                        )}
 
                     </div>
 
                     {/* Rating Progress */}
+
                     <div>
 
                         <div className="h-6 w-48 rounded bg-muted" />
@@ -327,29 +582,38 @@ function App() {
 
                         <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
 
-                            {[1, 2].map((item) => (
-                                <div
-                                    key={item}
-                                    className="h-[330px] rounded-2xl border border-border bg-card p-6"
-                                >
-                                    <div className="flex items-center justify-between">
+                            {[1, 2].map(
+                                (item) => (
+                                    <div
+                                        key={item}
+                                        className="h-[330px] rounded-2xl border border-border bg-card p-6"
+                                    >
 
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-11 w-11 rounded-xl bg-muted" />
+                                        <div className="flex items-center justify-between">
 
-                                            <div>
-                                                <div className="h-5 w-24 rounded bg-muted" />
-                                                <div className="mt-2 h-3 w-20 rounded bg-muted" />
+                                            <div className="flex items-center gap-3">
+
+                                                <div className="h-11 w-11 rounded-xl bg-muted" />
+
+                                                <div>
+
+                                                    <div className="h-5 w-24 rounded bg-muted" />
+
+                                                    <div className="mt-2 h-3 w-20 rounded bg-muted" />
+
+                                                </div>
+
                                             </div>
+
+                                            <div className="h-8 w-20 rounded bg-muted" />
+
                                         </div>
 
-                                        <div className="h-8 w-20 rounded bg-muted" />
+                                        <div className="mt-8 h-[210px] rounded-xl bg-muted/40" />
 
                                     </div>
-
-                                    <div className="mt-8 h-[210px] rounded-xl bg-muted/40" />
-                                </div>
-                            ))}
+                                )
+                            )}
 
                         </div>
 
@@ -360,16 +624,15 @@ function App() {
         )
     }
 
-
     /* ========================================================= */
-    /* APP                                                        */
+    /* APP                                                       */
     /* ========================================================= */
 
     return (
         <Routes>
 
             {/* ================================================= */}
-            {/* PUBLIC STUDENT PROFILE                           */}
+            {/* PUBLIC STUDENT PROFILE                            */}
             {/* ================================================= */}
 
             <Route
@@ -380,95 +643,116 @@ function App() {
             />
 
             {/* ================================================= */}
-            {/* MAIN CODESYNC APP                                */}
+            {/* MAIN CODESYNC APP                                 */}
             {/* ================================================= */}
 
             <Route
                 path="*"
                 element={
                     <Layout
-                        activePage={activePage}
-                        setActivePage={setActivePage}
+                        activePage={
+                            activePage
+                        }
+                        setActivePage={
+                            setActivePage
+                        }
                         profile={profile}
-                        onLogout={async () => {
-                            await supabase.auth.signOut()
-
-                            setCurrentPage("login")
-                            setActivePage("Dashboard")
-                            setProfile(null)
-                        }}
+                        onLogout={
+                            handleLogout
+                        }
                     >
 
-                        {activePage ===
-                            "Dashboard" && (
-                                <>
-                                    {profileLoading ? (
-                                        <DashboardLoading />
-                                    ) : (
-                                        <>
-                                            <DashboardHeader profile={profile} />
-                                            <QuickStats profile={profile} />
+                        {/* ========================= */}
+                        {/* DASHBOARD                 */}
+                        {/* ========================= */}
 
-                                            <PlatformCards
-                                                profile={profile}
-                                            />
+                        {activePage === "Dashboard" && (
+                            <>
+                                {profileLoading ? (
+                                    <DashboardLoading />
+                                ) : (
+                                    <>
+                                        <DashboardHeader
+                                            profile={profile}
+                                            setActivePage={setActivePage}
+                                        />
 
-                                            <RatingProgress />
+                                        <QuickStats
+                                            profile={profile}
+                                        />
 
-                                            <CodingHeatmap />
-                                        </>
-                                    )}
-                                </>
-                            )}
+                                        <PlatformCards
+                                            profile={profile}
+                                        />
+
+                                        <RatingProgress />
+
+                                        <CodingHeatmap />
+                                    </>
+                                )}
+                            </>
+                        )}
+
+                        {/* ========================= */}
+                        {/* LEADERBOARD               */}
+                        {/* ========================= */}
 
                         {activePage ===
                             "Leaderboard" && (
                                 <Leaderboard />
                             )}
 
+                        {/* ========================= */}
+                        {/* STUDENT PROFILE           */}
+                        {/* ========================= */}
+
                         {activePage ===
                             "Student Profile" && (
                                 <StudentProfile />
                             )}
+
+                        {/* ========================= */}
+                        {/* CONTESTS                  */}
+                        {/* ========================= */}
 
                         {activePage ===
                             "Contests" && (
                                 <Contests />
                             )}
 
+                        {/* ========================= */}
+                        {/* ANALYTICS                 */}
+                        {/* ========================= */}
+
                         {activePage ===
                             "Analytics" && (
                                 <Analytics />
                             )}
 
+                        {/* ========================= */}
+                        {/* SETTINGS                  */}
+                        {/* ========================= */}
+
                         {activePage ===
                             "Settings" && (
                                 <Settings
-                                    profile={profile}
-
+                                    profile={
+                                        profile
+                                    }
                                     onViewProfile={() =>
                                         setActivePage(
                                             "Student Profile"
                                         )
                                     }
-
-                                    onLogout={async () => {
-                                        await supabase.auth.signOut()
-
-                                        setCurrentPage(
-                                            "login"
-                                        )
-
-                                        setActivePage(
-                                            "Dashboard"
-                                        )
-
-                                        setProfile(
-                                            null
-                                        )
-                                    }}
+                                    onLogout={
+                                        handleLogout
+                                    }
                                 />
                             )}
+
+                        {/* ========================= */}
+                        {/* NOTIFICATIONS             */}
+                        {/* ========================= */}
 
                         {activePage ===
                             "Notifications" && (

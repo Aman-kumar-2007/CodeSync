@@ -1,80 +1,111 @@
-const cron = require("node-cron")
 const supabase = require("../config/supabase")
-const { syncUserPlatforms } = require("../services/platformSync.service")
+const {
+    syncUserPlatforms,
+} = require("../services/platformSync.service")
+
+const SYNC_INTERVAL = 6 * 60 * 60 * 1000 // 6 hours
+
+let syncRunning = false
 
 const runPlatformSync = async () => {
-    console.log("Starting scheduled platform sync...")
-
-    const {
-        data: accounts,
-        error,
-    } = await supabase
-        .from("platform_accounts")
-        .select("user_id")
-        .eq("verification_status", "VERIFIED")
-
-    if (error) {
-        throw new Error(
-            `Failed to load verified accounts: ${error.message}`
+    if (syncRunning) {
+        console.log(
+            "[Platform Sync] Previous sync is still running. Skipping."
         )
+        return
     }
 
-    const userIds = [
-        ...new Set(
-            (accounts || []).map(
-                (account) => account.user_id
-            )
-        ),
-    ]
+    syncRunning = true
 
     console.log(
-        `Found ${userIds.length} users to sync.`
+        "[Platform Sync] Background sync started..."
     )
 
-    for (const userId of userIds) {
-        try {
-            await syncUserPlatforms(userId)
-
-            console.log(
-                `Platform sync completed for user: ${userId}`
+    try {
+        const {
+            data: users,
+            error,
+        } = await supabase
+            .from("platform_accounts")
+            .select("user_id")
+            .eq(
+                "verification_status",
+                "VERIFIED"
             )
-        } catch (error) {
-            console.error(
-                `Platform sync failed for user ${userId}:`,
-                error.message
+
+        if (error) {
+            throw new Error(
+                `Failed to load users: ${error.message}`
             )
         }
-    }
 
-    console.log("Scheduled platform sync completed.")
+        const userIds = [
+            ...new Set(
+                (users || []).map(
+                    (item) => item.user_id
+                )
+            ),
+        ]
+
+        console.log(
+            `[Platform Sync] Users to sync: ${userIds.length}`
+        )
+
+        const results = await Promise.allSettled(
+            userIds.map((userId) =>
+                syncUserPlatforms(userId)
+            )
+        )
+
+        let successful = 0
+        let failed = 0
+
+        results.forEach((result) => {
+            if (result.status === "fulfilled") {
+                successful++
+            } else {
+                failed++
+
+                console.error(
+                    "[Platform Sync] User sync failed:",
+                    result.reason
+                )
+            }
+        })
+
+        console.log(
+            `[Platform Sync] Completed. Success: ${successful}, Failed: ${failed}`
+        )
+    } catch (error) {
+        console.error(
+            "[Platform Sync] Fatal error:",
+            error
+        )
+    } finally {
+        syncRunning = false
+    }
 }
 
 const startPlatformSyncJob = () => {
-    // Run once immediately when server starts
-    runPlatformSync().catch((error) => {
-        console.error(
-            "Initial platform sync failed:",
-            error
-        )
-    })
-
-    // Then run every 6 hours
-    cron.schedule("0 */6 * * *", async () => {
-        try {
-            await runPlatformSync()
-        } catch (error) {
-            console.error(
-                "Scheduled platform sync failed:",
-                error
-            )
-        }
-    })
+    console.log(
+        "[Platform Sync] Scheduler started."
+    )
 
     console.log(
-        "Platform sync scheduler started. Runs every 6 hours."
+        "[Platform Sync] Next sync in 6 hours."
+    )
+
+    // IMPORTANT:
+    // Do NOT run sync immediately when backend starts.
+    // Existing cached DB data should be used by the frontend.
+
+    setInterval(
+        runPlatformSync,
+        SYNC_INTERVAL
     )
 }
 
 module.exports = {
     startPlatformSyncJob,
+    runPlatformSync,
 }

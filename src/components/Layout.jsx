@@ -14,9 +14,6 @@ function Layout({
 
     return (
         <div className="min-h-screen bg-background text-foreground">
-
-            {/* Sidebar */}
-
             <Sidebar
                 activePage={activePage}
                 setActivePage={setActivePage}
@@ -26,19 +23,17 @@ function Layout({
                 profile={profile}
             />
 
-
-            {/* Main Content */}
-
             <main
-                className={`min-h-screen overflow-x-hidden pt-[72px] transition-all duration-300 ${
-                    sidebarCollapsed
+                className={`
+                    min-h-screen
+                    overflow-x-hidden
+                    pt-[72px]
+                    ${sidebarCollapsed
                         ? "ml-[76px]"
                         : "ml-[240px]"
-                }`}
+                    }
+                `}
             >
-
-                {/* Topbar */}
-
                 <Topbar
                     activePage={activePage}
                     setActivePage={setActivePage}
@@ -47,13 +42,8 @@ function Layout({
                     }
                 />
 
-
-                {/* Page */}
-
                 {children}
-
             </main>
-
         </div>
     )
 }
