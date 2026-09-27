@@ -398,16 +398,12 @@ function ProfileSetup({ onComplete }) {
         }
 
         if (formData.password.length < 8) {
-            alert(
-                "Password must be at least 8 characters."
-            )
+            alert("Password must be at least 8 characters.")
             return
         }
 
         if (formData.username.trim().length < 3) {
-            alert(
-                "Username must be at least 3 characters."
-            )
+            alert("Username must be at least 3 characters.")
             return
         }
 
@@ -441,8 +437,7 @@ function ProfileSetup({ onComplete }) {
 
             if (
                 username &&
-                verification[platform].status !==
-                "verified"
+                verification[platform].status !== "verified"
             ) {
                 alert(
                     `${platformNames[platform]} account is not verified. Please verify it or remove the username.`
@@ -454,8 +449,7 @@ function ProfileSetup({ onComplete }) {
 
         if (
             Object.values(verification).some(
-                (item) =>
-                    item.status === "loading"
+                (item) => item.status === "loading"
             )
         ) {
             alert(
@@ -464,6 +458,23 @@ function ProfileSetup({ onComplete }) {
 
             return
         }
+
+        // -----------------------------------------
+        // Get name from Google/Supabase metadata
+        // -----------------------------------------
+
+        const metadata = user.user_metadata || {}
+
+        const fullName =
+            metadata.full_name ||
+            metadata.fullName ||
+            metadata.name ||
+            user.email?.split("@")[0] ||
+            "Student"
+
+        // -----------------------------------------
+        // Update password
+        // -----------------------------------------
 
         const { error: passwordError } =
             await supabase.auth.updateUser({
@@ -474,6 +485,42 @@ function ProfileSetup({ onComplete }) {
             alert(passwordError.message)
             return
         }
+
+        // -----------------------------------------
+        // Create/update student profile
+        // -----------------------------------------
+
+        const { error: studentProfileError } =
+            await supabase
+                .from("student_profiles")
+                .upsert(
+                    {
+                        user_id: user.id,
+                        full_name: fullName,
+                        branch: "CSE",
+                    },
+                    {
+                        onConflict: "user_id",
+                    }
+                )
+
+        if (studentProfileError) {
+            console.error(
+                "Student profile save error:",
+                studentProfileError
+            )
+
+            alert(
+                studentProfileError.message ||
+                "Failed to save student profile."
+            )
+
+            return
+        }
+
+        // -----------------------------------------
+        // Update public.users
+        // -----------------------------------------
 
         const { error: profileError } =
             await supabase

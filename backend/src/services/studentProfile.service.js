@@ -436,54 +436,39 @@ const getMyProfile = async (userId) => {
 /* UPDATE MY PROFILE                                             */
 /* ============================================================= */
 
-const updateMyProfile = async (
-    userId,
-    { fullName }
-) => {
+const updateMyProfile = async (userId, { fullName }) => {
     if (!userId) {
-        const error = new Error(
-            "User ID is required."
-        )
-
+        const error = new Error("User ID is required.")
         error.statusCode = 400
-
         throw error
     }
 
-
-    const name =
-        fullName?.trim()
-
+    const name = fullName?.trim()
 
     if (!name) {
-        const error = new Error(
-            "Full name is required."
-        )
-
+        const error = new Error("Full name is required.")
         error.statusCode = 400
-
         throw error
     }
 
-
-    const {
-        error,
-    } = await supabase
+    const { error } = await supabase
         .from("student_profiles")
-        .update({
-            full_name: name,
-        })
-        .eq(
-            "user_id",
-            userId
+        .upsert(
+            {
+                user_id: userId,
+                full_name: name,
+                branch: "CSE",
+            },
+            {
+                onConflict: "user_id",
+            }
         )
 
     if (error) {
         throw new Error(
-            `Failed to update profile: ${error.message}`
+            `Failed to save student profile: ${error.message}`
         )
     }
-
 
     return getMyProfile(userId)
 }

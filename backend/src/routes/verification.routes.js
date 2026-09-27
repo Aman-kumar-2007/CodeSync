@@ -798,7 +798,7 @@ router.post(
 // =====================================================
 
 // Start GitHub OAuth
-router.get(
+router.post(
     "/github/start",
     requireAuth,
     async (req, res) => {
@@ -832,9 +832,10 @@ router.get(
                 }
             )
 
-            return res.redirect(
-                authorizationUrl
-            )
+            return res.json({
+                success: true,
+                authorizationUrl,
+            })
         } catch (error) {
             console.error(
                 "GitHub OAuth start error:",
@@ -848,7 +849,6 @@ router.get(
         }
     }
 )
-
 
 // GitHub OAuth callback
 router.get(

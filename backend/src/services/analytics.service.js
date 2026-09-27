@@ -863,75 +863,58 @@ const getAnalyticsSummary = async (
 
 
     // =====================================================
-    // STREAK
+    // STREAK CALCULATION
     // =====================================================
 
-    const activeDates =
-        new Set(
-            activity
-                .filter(
-                    (day) =>
-                        (day.problem_count || 0) > 0 ||
-                        (day.submission_count || 0) > 0 ||
-                        (day.contribution_count || 0) > 0
-                )
-                .map(
-                    (day) =>
-                        String(
-                            day.activity_date
-                        ).slice(0, 10)
-                )
-        )
+    const activeDates = new Set(
+        (activity || [])
+            .filter(
+                (day) =>
+                    (day.problem_count || 0) > 0 ||
+                    (day.submission_count || 0) > 0 ||
+                    (day.contribution_count || 0) > 0
+            )
+            .map((day) =>
+                String(day.activity_date).slice(0, 10)
+            )
+    )
 
+    // -----------------------------------------------------
+    // CURRENT STREAK
+    // -----------------------------------------------------
 
-    const indiaToday =
-        new Intl.DateTimeFormat(
-            "en-CA",
-            {
-                timeZone:
-                    "Asia/Kolkata",
-            }
-        ).format(new Date())
-
+    const indiaToday = new Intl.DateTimeFormat(
+        "en-CA",
+        {
+            timeZone: "Asia/Kolkata",
+        }
+    ).format(new Date())
 
     let streak = 0
 
-    const todayIsActive =
-        activeDates.has(
-            indiaToday
-        )
+    const streakStart = new Date(
+        `${indiaToday}T00:00:00+05:30`
+    )
 
-
-    const streakStart =
-        new Date(
-            `${indiaToday}T00:00:00+05:30`
-        )
-
-
-    if (!todayIsActive) {
-
+    // If today is not active, start from yesterday.
+    // This keeps the streak alive when today's activity
+    // has not happened yet.
+    if (!activeDates.has(indiaToday)) {
         streakStart.setDate(
             streakStart.getDate() - 1
         )
     }
 
-
     while (true) {
-
         const dateKey =
             new Intl.DateTimeFormat(
                 "en-CA",
                 {
-                    timeZone:
-                        "Asia/Kolkata",
+                    timeZone: "Asia/Kolkata",
                 }
             ).format(streakStart)
 
-        if (
-            !activeDates.has(
-                dateKey
-            )
-        ) {
+        if (!activeDates.has(dateKey)) {
             break
         }
 
@@ -942,6 +925,90 @@ const getAnalyticsSummary = async (
         )
     }
 
+    // -----------------------------------------------------
+    // MAXIMUM HISTORICAL STREAK
+    // -----------------------------------------------------
+
+    const sortedActiveDates =
+        Array.from(activeDates).sort()
+
+    let maxStreak = 0
+    let runningStreak = 0
+    let previousDate = null
+
+    for (const dateKey of sortedActiveDates) {
+        const currentDate = new Date(
+            `${dateKey}T00:00:00Z`
+        )
+
+        if (!previousDate) {
+            runningStreak = 1
+        } else {
+            const differenceInDays = Math.round(
+                (currentDate - previousDate) /
+                (1000 * 60 * 60 * 24)
+            )
+
+            if (differenceInDays === 1) {
+                runningStreak++
+            } else {
+                runningStreak = 1
+            }
+        }
+
+        maxStreak = Math.max(
+            maxStreak,
+            runningStreak
+        )
+
+        previousDate = currentDate
+    }
+
+    // -----------------------------------------------------
+    // SAVE ANALYTICS SNAPSHOT
+    // -----------------------------------------------------
+
+    const activeDays = activeDates.size
+
+    const lastActiveDate =
+        sortedActiveDates.length > 0
+            ? sortedActiveDates[
+            sortedActiveDates.length - 1
+            ]
+            : null
+
+    const {
+        error: analyticsSaveError,
+    } = await supabase
+        .from("student_analytics")
+        .upsert(
+            {
+                user_id: userId,
+                current_streak: streak,
+                max_streak: maxStreak,
+                active_days: activeDays,
+                problems_solved:
+                    totalProblemsSolved,
+                contests_participated:
+                    totalContests,
+                last_active_at: lastActiveDate
+                    ? `${lastActiveDate}T23:59:59+05:30`
+                    : null,
+                calculated_at:
+                    new Date().toISOString(),
+                updated_at:
+                    new Date().toISOString(),
+            },
+            {
+                onConflict: "user_id",
+            }
+        )
+
+    if (analyticsSaveError) {
+        throw new Error(
+            `Failed to save student analytics: ${analyticsSaveError.message}`
+        )
+    }
 
     // =====================================================
     // AGGREGATED ACTIVITY
