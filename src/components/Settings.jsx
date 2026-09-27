@@ -156,7 +156,7 @@ function Settings({
                 }
 
                 const response = await fetch(
-                    "http://localhost:5001/api/preferences",
+                    "https://codesync-su2x.onrender.com/api/preferences",
                     {
                         headers: {
                             Authorization: `Bearer ${session.access_token}`,
@@ -215,7 +215,7 @@ function Settings({
             }
 
             const response = await fetch(
-                "http://localhost:5001/api/preferences",
+                "https://codesync-su2x.onrender.com/api/preferences",
                 {
                     method: "PUT",
                     headers: {

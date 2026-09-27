@@ -221,7 +221,7 @@ function Topbar({
       }
 
       const response = await fetch(
-        "http://localhost:5001/api/notifications",
+        "https://codesync-su2x.onrender.com/api/notifications",
         {
           headers: {
             Authorization:
@@ -278,7 +278,7 @@ function Topbar({
       }
 
       const response = await fetch(
-        `http://localhost:5001/api/notifications/${recipientId}/read`,
+        `https://codesync-su2x.onrender.com/api/notifications/${recipientId}/read`,
         {
           method: "PUT",
           headers: {

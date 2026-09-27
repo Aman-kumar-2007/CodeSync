@@ -48,7 +48,7 @@ function AuthPage({ onLogin }) {
         if (!identifier.includes("@")) {
             try {
                 const response = await fetch(
-                    "http://localhost:5001/api/auth/resolve-username",
+                    "https://codesync-su2x.onrender.com/api/auth/resolve-username",
                     {
                         method: "POST",
                         headers: {

@@ -227,7 +227,7 @@ function Leaderboard() {
                 setCurrentUserId(session.user.id)
 
                 const response = await fetch(
-                    "http://localhost:5001/api/leaderboard",
+                    "https://codesync-su2x.onrender.com/api/leaderboard",
                     {
                         headers: {
                             Authorization: `Bearer ${session.access_token}`,

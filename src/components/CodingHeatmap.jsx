@@ -73,7 +73,7 @@ function CodingHeatmap({
                 }
 
                 const response = await fetch(
-                    "http://localhost:5001/api/verification/activity",
+                    "https://codesync-su2x.onrender.com/api/verification/activity",
                     {
                         headers: {
                             Authorization:

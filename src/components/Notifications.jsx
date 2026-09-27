@@ -127,7 +127,7 @@ function Notifications() {
                 await getAccessToken()
 
             const response = await fetch(
-                "http://localhost:5001/api/notifications",
+                "https://codesync-su2x.onrender.com/api/notifications",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -177,7 +177,7 @@ function Notifications() {
                 await getAccessToken()
 
             const response = await fetch(
-                `http://localhost:5001/api/notifications/${recipientId}/read`,
+                `https://codesync-su2x.onrender.com/api/notifications/${recipientId}/read`,
                 {
                     method: "PUT",
                     headers: {
@@ -234,7 +234,7 @@ function Notifications() {
                 await getAccessToken()
 
             const response = await fetch(
-                "http://localhost:5001/api/notifications/read-all",
+                "https://codesync-su2x.onrender.com/api/notifications/read-all",
                 {
                     method: "PUT",
                     headers: {
@@ -289,7 +289,7 @@ function Notifications() {
                 await getAccessToken()
 
             const response = await fetch(
-                "http://localhost:5001/api/notifications",
+                "https://codesync-su2x.onrender.com/api/notifications",
                 {
                     method: "DELETE",
                     headers: {

@@ -889,14 +889,14 @@ function Analytics() {
                     leaderboardResponse,
                 ] = await Promise.all([
                     fetch(
-                        "http://localhost:5001/api/analytics",
+                        "https://codesync-su2x.onrender.com/api/analytics",
                         {
                             headers,
                         }
                     ),
 
                     fetch(
-                        "http://localhost:5001/api/leaderboard",
+                        "https://codesync-su2x.onrender.com/api/leaderboard",
                         {
                             headers,
                         }

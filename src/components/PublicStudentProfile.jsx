@@ -55,7 +55,7 @@ const PublicStudentProfile = () => {
                 }
 
                 const response = await fetch(
-                    `http://localhost:5001/api/students/${encodeURIComponent(
+                    `https://codesync-su2x.onrender.com/api/students/${encodeURIComponent(
                         username
                     )}`,
                     {
