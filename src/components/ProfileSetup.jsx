@@ -542,6 +542,52 @@ function ProfileSetup({ onComplete }) {
             return
         }
 
+        // -----------------------------------------
+        // FIRST PLATFORM SYNC
+        // -----------------------------------------
+
+        try {
+            const {
+                data: {
+                    session,
+                },
+            } =
+                await supabase.auth.getSession()
+
+            if (session?.access_token) {
+                fetch(
+                    `${API_BASE_URL}/api/platform-sync/first-sync`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+                            Authorization:
+                                `Bearer ${session.access_token}`,
+                        },
+                    }
+                ).catch((error) => {
+                    console.error(
+                        "Initial platform sync request failed:",
+                        error
+                    )
+                })
+            } else {
+                console.warn(
+                    "No active session found. Initial sync was not triggered."
+                )
+            }
+        } catch (error) {
+            console.error(
+                "Initial platform sync trigger error:",
+                error
+            )
+        }
+
+        // -----------------------------------------
+        // Complete Setup
+        // -----------------------------------------
+
         alert(
             "Account setup completed successfully."
         )
