@@ -18,7 +18,7 @@ import {
 import { supabase } from "../lib/supabase"
 
 const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:5001"
+    import.meta.env.VITE_API_URL || "https://codesync-su2x.onrender.com"
 
 const platformMap = {
     leetcode: "leetcode",
