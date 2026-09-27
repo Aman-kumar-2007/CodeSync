@@ -429,11 +429,6 @@ const saveGithubStats = async (userId) => {
         .single()
 
     if (accountError) {
-        console.error(
-            "GitHub platform account query error:",
-            accountError
-        )
-
         throw new Error(
             `GitHub account query failed: ${accountError.message}`
         )
@@ -442,6 +437,11 @@ const saveGithubStats = async (userId) => {
     const stats = await getGithubStats(
         platformAccount.username
     )
+
+    const contributionData =
+        await getGithubContributions(
+            platformAccount.username
+        )
 
     const {
         data,
@@ -454,24 +454,19 @@ const saveGithubStats = async (userId) => {
                     platformAccount.id,
 
                 problems_solved: 0,
-
                 basic_solved: 0,
-
                 easy_solved: 0,
-
                 medium_solved: 0,
-
                 hard_solved: 0,
-
                 contest_count: 0,
 
-                contributions: 0,
+                contributions:
+                    contributionData.totalContributions,
 
                 repository_count:
                     stats.repositories,
 
                 current_rating: null,
-
                 max_rating: null,
 
                 recorded_at:
@@ -494,38 +489,22 @@ const saveGithubStats = async (userId) => {
         )
     }
 
-    const dailyActivity = await saveGithubDailyActivity(
+    const activities =
+        contributionData.contributions.map(
+            (day) => ({
+                date: day.date,
+                contributionCount:
+                    day.count,
+            })
+        )
+
+    await saveDailyActivity(
         userId,
-        platformAccount.username
+        "GITHUB",
+        activities
     )
 
-    const { error: contributionUpdateError } = await supabase
-        .from("platform_stats")
-        .update({
-            contributions: dailyActivity.totalContributions,
-            updated_at: new Date().toISOString(),
-        })
-        .eq("platform_account_id", platformAccount.id)
-
-    if (contributionUpdateError) {
-        throw new Error(
-            `Failed to update GitHub contributions: ${contributionUpdateError.message}`
-        )
-    }
-
-
-    return {
-        ...data,
-
-        pullRequests:
-            stats.pullRequests,
-
-        followers:
-            stats.followers,
-
-        following:
-            stats.following,
-    }
+    return data
 }
 
 module.exports = {
