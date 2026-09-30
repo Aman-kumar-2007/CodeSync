@@ -935,14 +935,11 @@ function Analytics() {
                     analyticsResult.data
                 )
 
-                setGlobalRank({
-                    rank:
-                        leaderboardResult.data
-                            .currentUserRank,
+                const leaderboardData = leaderboardResult?.data || {}
 
-                    total:
-                        leaderboardResult.data
-                            .leaderboard?.length || 0,
+                setGlobalRank({
+                    rank: leaderboardData?.currentUserRank ?? null,
+                    total: leaderboardData?.leaderboard?.length ?? 0,
                 })
 
             } catch (error) {
@@ -960,7 +957,7 @@ function Analytics() {
 
         fetchAnalytics()
     }, [])
-    
+
 
     if (loading) {
         return <AnalyticsLoading />

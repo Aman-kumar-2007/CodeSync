@@ -225,6 +225,10 @@ const getLeaderboard = async (currentUserId) => {
         )
     )
 
+    if (currentUserId && !userIds.includes(currentUserId)) {
+        userIds.push(currentUserId)
+    }
+
     // =====================================================
     // BUILD LEADERBOARD
     // =====================================================
