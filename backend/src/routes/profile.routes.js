@@ -1,7 +1,7 @@
 const express = require("express")
 const multer = require("multer")
 
-const requireAuth = require("../middleware/requireAuth")
+const requireAuth = require("../middleware/auth.middleware");
 
 const {
     getStudentProfile,
