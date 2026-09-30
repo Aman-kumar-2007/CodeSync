@@ -423,7 +423,7 @@ const saveGithubStats = async (userId) => {
         error: accountError,
     } = await supabase
         .from("platform_accounts")
-        .select("id, username")
+        .select("id, username, access_token")
         .eq("user_id", userId)
         .eq("platform", "GITHUB")
         .eq("verification_status", "VERIFIED")
@@ -436,7 +436,8 @@ const saveGithubStats = async (userId) => {
     }
 
     const stats = await getGithubStats(
-        platformAccount.username
+        platformAccount.username,
+        platformAccount.access_token
     )
 
     const contributionData =

@@ -97,25 +97,24 @@ const getGithubPullRequests = async (
     return data.total_count || 0
 }
 
-const getGithubStats = async (username) => {
-    const user = await githubRequest(
-        `/users/${encodeURIComponent(username)}`,
-        null
+const getGithubStats = async (
+    username,
+    accessToken
+) => {
+    const user = await getGithubUser(
+        accessToken
     )
 
-    const repositories = await githubRequest(
-        `/users/${encodeURIComponent(username)}/repos?per_page=100&type=all`,
-        null
-    )
+    const repositories =
+        await getGithubRepositories(
+            accessToken
+        )
 
-    const query = encodeURIComponent(
-        `is:pr author:${username}`
-    )
-
-    const pullRequestData = await githubRequest(
-        `/search/issues?q=${query}&per_page=1`,
-        null
-    )
+    const pullRequests =
+        await getGithubPullRequests(
+            username,
+            accessToken
+        )
 
     return {
         username: user.login,
@@ -130,10 +129,9 @@ const getGithubStats = async (username) => {
             user.public_repos || 0,
 
         repositories:
-            user.public_repos || 0,
+            repositories.length,
 
-        pullRequests:
-            pullRequestData.total_count || 0,
+        pullRequests,
 
         followers:
             user.followers || 0,
