@@ -1,12 +1,53 @@
 import {
     Pencil,
     GraduationCap,
+    RefreshCw,
 } from "lucide-react"
+import { useState } from "react"
+import { supabase } from "../lib/supabase"
+
+const API_BASE_URL = "https://codesync-su2x.onrender.com"
 
 function DashboardHeader({
     profile,
     setActivePage,
 }) {
+
+    const [syncing, setSyncing] = useState(false)
+
+    const handleSync = async () => {
+        try {
+            setSyncing(true)
+
+            const {
+                data: { session },
+            } = await supabase.auth.getSession()
+
+            const response = await fetch(
+                `${API_BASE_URL}/api/platform-sync/sync`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            )
+
+            if (!response.ok) {
+                throw new Error("Sync failed")
+            }
+
+            alert("Platform data synced successfully.")
+            window.location.reload()
+        } catch (error) {
+            console.error("Manual sync error:", error)
+            alert("Sync failed. Please try again.")
+        } finally {
+            setSyncing(false)
+        }
+    }
+
     const getGreeting = () => {
         const hour = new Date().getHours()
 
@@ -115,39 +156,55 @@ function DashboardHeader({
                         </p>
                     </div>
 
-                    {/* Edit Profile */}
+                    <div className="absolute right-6 top-5 flex gap-2">
 
-                    <button
-                        type="button"
-                        onClick={() =>
-                            setActivePage(
-                                "Student Profile"
-                            )
-                        }
-                        className="
-                            absolute
-                            right-6
-                            top-5
-                            flex
-                            items-center
-                            gap-2
-                            rounded-lg
-                            border
-                            border-primary/50
-                            bg-primary/5
-                            px-4
-                            py-2.5
-                            text-xs
-                            font-semibold
-                            text-foreground
-                            transition-colors
-                            hover:bg-primary/10
-                        "
-                    >
-                        <Pencil size={14} />
+                        <button
+                            type="button"
+                            onClick={handleSync}
+                            disabled={syncing}
+                            className="
+                            flex items-center gap-2
+            rounded-lg
+            border border-primary/50
+            bg-primary/5
+            px-4 py-2.5
+            text-xs font-semibold
+            text-foreground
+            transition-colors
+            hover:bg-primary/10
+            disabled:opacity-50
+        "
+                        >
+                            <RefreshCw
+                                size={14}
+                                className={syncing ? "animate-spin" : ""}
+                            />
 
-                        Edit Profile
-                    </button>
+                            {syncing ? "Syncing..." : "Sync"}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setActivePage("Student Profile")
+                            }
+                            className="
+            flex items-center gap-2
+            rounded-lg
+            border border-primary/50
+            bg-primary/5
+            px-4 py-2.5
+            text-xs font-semibold
+            text-foreground
+            transition-colors
+            hover:bg-primary/10
+        "
+                        >
+                            <Pencil size={14} />
+                            Edit Profile
+                        </button>
+
+                    </div>
                 </div>
             </div>
         </section>

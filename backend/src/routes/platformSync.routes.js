@@ -52,4 +52,42 @@ router.post(
     }
 )
 
+// =====================================================
+// MANUAL SYNC FOR EXISTING USER
+// =====================================================
+
+router.post(
+    "/sync",
+    requireAuth,
+    async (req, res) => {
+        const userId = req.userId
+
+        if (!userId) {
+            return res.status(401).json({
+                error: "User authentication required.",
+            })
+        }
+
+        try {
+            const result = await syncUserPlatforms(userId)
+
+            return res.status(200).json({
+                success: true,
+                message: "Platform sync completed.",
+                result,
+            })
+        } catch (error) {
+            console.error(
+                "[Platform Sync] Manual sync failed:",
+                error
+            )
+
+            return res.status(500).json({
+                success: false,
+                error: "Platform sync failed.",
+            })
+        }
+    }
+)
+
 module.exports = router
