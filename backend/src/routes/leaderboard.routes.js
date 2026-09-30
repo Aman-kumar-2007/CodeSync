@@ -12,7 +12,8 @@ router.get("/", requireAuth, async (req, res) => {
 
         return res.json({
             success: true,
-            data,
+            leaderboard: data.leaderboard || [],
+            currentUserRank: data.currentUserRank || null,
         })
     } catch (error) {
         console.error("Leaderboard error:", error)
@@ -20,6 +21,8 @@ router.get("/", requireAuth, async (req, res) => {
         return res.status(500).json({
             success: false,
             message: error.message,
+            leaderboard: [],
+            currentUserRank: null,
         })
     }
 })
