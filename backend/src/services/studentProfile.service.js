@@ -654,6 +654,55 @@ const uploadProfilePhoto = async (
     }
 }
 
+/* ============================================================= */
+/* REMOVE PROFILE PHOTO                                          */
+/* ============================================================= */
+
+const removeProfilePhoto = async (userId) => {
+    if (!userId) {
+        const error = new Error("User ID is required.")
+        error.statusCode = 400
+        throw error
+    }
+
+    const possibleFiles = [
+        `${userId}/profile.jpg`,
+        `${userId}/profile.png`,
+        `${userId}/profile.webp`,
+    ]
+
+    // Remove image files from Supabase Storage
+    const { error: storageError } = await supabase
+        .storage
+        .from(PROFILE_BUCKET)
+        .remove(possibleFiles)
+
+    if (storageError) {
+        throw new Error(
+            `Failed to remove profile photo: ${storageError.message}`
+        )
+    }
+
+    // Remove image URL from database
+    const { error: profileError } = await supabase
+        .from("student_profiles")
+        .update({
+            profile_image: null,
+        })
+        .eq("user_id", userId)
+
+    if (profileError) {
+        throw new Error(
+            `Failed to remove profile photo from profile: ${profileError.message}`
+        )
+    }
+
+    return {
+        success: true,
+        avatar: null,
+    }
+}
+
 
 /* ============================================================= */
 /* SAVE SOCIAL ACCOUNT                                          */
@@ -826,6 +875,7 @@ module.exports = {
     getMyProfile,
     updateMyProfile,
     uploadProfilePhoto,
+    removeProfilePhoto,
     saveSocialAccount,
     removeSocialAccount,
 }

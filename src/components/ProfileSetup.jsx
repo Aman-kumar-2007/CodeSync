@@ -240,28 +240,91 @@ function ProfileSetup({ onComplete }) {
         }
     }
 
-    const handleDisconnect = (platform) => {
-        if (
-            platform === "github" &&
-            githubPollRef.current
-        ) {
-            clearInterval(githubPollRef.current)
-            githubPollRef.current = null
-        }
+    const handleDisconnect = async (platform) => {
+        try {
+            if (
+                platform === "github" &&
+                githubPollRef.current
+            ) {
+                clearInterval(
+                    githubPollRef.current
+                )
 
-        setVerification((prev) => ({
-            ...prev,
-            [platform]: {
-                status: "idle",
-                code: "",
-            },
-        }))
+                githubPollRef.current = null
+            }
 
-        if (platform !== "github") {
+            const token =
+                await getAccessToken()
+
+            if (!token) {
+                return
+            }
+
+            const platformMap = {
+                leetcode: "LEETCODE",
+                codeforces: "CODEFORCES",
+                gfg: "GFG",
+                github: "GITHUB",
+            }
+
+            const backendPlatform =
+                platformMap[platform]
+
+            if (!backendPlatform) {
+                throw new Error(
+                    "Invalid platform."
+                )
+            }
+
+            const response =
+                await fetch(
+                    `${API_BASE_URL}/api/verification/account/${backendPlatform}`,
+                    {
+                        method: "DELETE",
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`,
+                        },
+                    }
+                )
+
+            const data =
+                await response.json()
+
+            if (
+                !response.ok ||
+                data.success !== true
+            ) {
+                throw new Error(
+                    data.error ||
+                    data.message ||
+                    "Failed to disconnect account."
+                )
+            }
+
+            // Clear frontend state
+            setVerification((prev) => ({
+                ...prev,
+                [platform]: {
+                    status: "idle",
+                    code: "",
+                },
+            }))
+
             setFormData((prev) => ({
                 ...prev,
                 [platform]: "",
             }))
+        } catch (error) {
+            console.error(
+                `${platform} disconnect error:`,
+                error
+            )
+
+            alert(
+                error.message ||
+                "Failed to disconnect account."
+            )
         }
     }
 

@@ -1026,4 +1026,164 @@ router.get(
     }
 )
 
+
+/* ===================================================== */
+/* DELETE VERIFIED PLATFORM ACCOUNT                      */
+/* ===================================================== */
+
+/*
+    DELETE /api/verification/account/:platform
+
+    Supported:
+    LEETCODE
+    CODEFORCES
+    GFG
+    GITHUB
+*/
+
+router.delete(
+    "/account/:platform",
+    requireAuth,
+    async (req, res) => {
+        try {
+            const userId = req.userId
+
+            const platform =
+                req.params.platform
+                    ?.trim()
+                    .toUpperCase()
+
+            const allowedPlatforms = [
+                "LEETCODE",
+                "CODEFORCES",
+                "GFG",
+                "GITHUB",
+            ]
+
+            if (
+                !allowedPlatforms.includes(
+                    platform
+                )
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        "Invalid platform.",
+                })
+            }
+
+            // Find account first
+            const {
+                data: account,
+                error: accountError,
+            } = await supabase
+                .from("platform_accounts")
+                .select("id")
+                .eq("user_id", userId)
+                .eq("platform", platform)
+                .maybeSingle()
+
+            if (accountError) {
+                console.error(
+                    "Platform account lookup error:",
+                    accountError
+                )
+
+                return res.status(500).json({
+                    success: false,
+                    error:
+                        "Unable to find platform account.",
+                })
+            }
+
+            if (!account) {
+                return res.json({
+                    success: true,
+                    message:
+                        "Platform account is already disconnected.",
+                })
+            }
+
+            // Remove platform stats first
+            const {
+                error: statsError,
+            } = await supabase
+                .from("platform_stats")
+                .delete()
+                .eq(
+                    "platform_account_id",
+                    account.id
+                )
+
+            if (statsError) {
+                console.error(
+                    "Platform stats delete error:",
+                    statsError
+                )
+
+                return res.status(500).json({
+                    success: false,
+                    error:
+                        "Unable to remove platform stats.",
+                })
+            }
+
+            // Remove daily activity
+            const {
+                error: activityError,
+            } = await supabase
+                .from("daily_activity")
+                .delete()
+                .eq("user_id", userId)
+                .eq("platform", platform)
+
+            if (activityError) {
+                console.warn(
+                    "Daily activity delete warning:",
+                    activityError.message
+                )
+            }
+
+            // Finally remove platform account
+            const {
+                error: deleteError,
+            } = await supabase
+                .from("platform_accounts")
+                .delete()
+                .eq("id", account.id)
+                .eq("user_id", userId)
+
+            if (deleteError) {
+                console.error(
+                    "Platform account delete error:",
+                    deleteError
+                )
+
+                return res.status(500).json({
+                    success: false,
+                    error:
+                        "Unable to disconnect platform account.",
+                })
+            }
+
+            return res.json({
+                success: true,
+                message:
+                    `${platform} account disconnected successfully.`,
+            })
+        } catch (error) {
+            console.error(
+                "Platform disconnect error:",
+                error
+            )
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    "Something went wrong while disconnecting the platform.",
+            })
+        }
+    }
+)
+
 module.exports = router

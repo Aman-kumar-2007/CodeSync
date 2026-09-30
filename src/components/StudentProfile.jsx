@@ -647,6 +647,66 @@ function StudentProfile() {
     }
 
 
+    const handleRemovePhoto = async () => {
+        try {
+            setUploadingPhoto(true)
+            setError("")
+
+            const {
+                data: {
+                    session,
+                },
+            } = await supabase.auth.getSession()
+
+            if (!session?.access_token) {
+                throw new Error(
+                    "Authentication session not found."
+                )
+            }
+
+            const response = await fetch(
+                `${API_BASE_URL}/api/profile/me/photo`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization:
+                            `Bearer ${session.access_token}`,
+                    },
+                }
+            )
+
+            const result =
+                await response.json()
+
+            if (
+                !response.ok ||
+                !result.success
+            ) {
+                throw new Error(
+                    result.message ||
+                    "Failed to remove profile photo."
+                )
+            }
+
+            setProfile((prev) => ({
+                ...prev,
+                avatar: null,
+            }))
+        } catch (error) {
+            console.error(
+                "Profile photo remove error:",
+                error
+            )
+
+            setError(
+                error.message ||
+                "Failed to remove profile photo."
+            )
+        } finally {
+            setUploadingPhoto(false)
+        }
+    }
+
     /* ========================================================= */
     /* SOCIAL CONNECT                                            */
     /* ========================================================= */
@@ -1577,11 +1637,32 @@ function StudentProfile() {
                                     Profile Photo
                                 </p>
 
+                                <div className="mt-2 flex items-center gap-3">
+                                    <label
+                                        htmlFor="profile-photo"
+                                        className={`cursor-pointer text-[10px] font-medium text-primary hover:text-indigo-400 ${uploadingPhoto
+                                                ? "pointer-events-none opacity-50"
+                                                : ""
+                                            }`}
+                                    >
+                                        Change Photo
+                                    </label>
+
+                                    {profile.avatar && (
+                                        <button
+                                            type="button"
+                                            onClick={handleRemovePhoto}
+                                            disabled={uploadingPhoto}
+                                            className="text-[10px] font-medium text-red-400 hover:text-red-300 disabled:opacity-50"
+                                        >
+                                            Remove Photo
+                                        </button>
+                                    )}
+                                </div>
 
                                 <p className="mt-1 text-[10px] text-muted-foreground">
                                     JPG, PNG or WEBP · Max 5MB
                                 </p>
-
                             </div>
 
 

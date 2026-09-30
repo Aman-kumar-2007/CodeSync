@@ -8,6 +8,7 @@ const {
     getMyProfile,
     updateMyProfile,
     uploadProfilePhoto,
+    removeProfilePhoto,
     saveSocialAccount,
     removeSocialAccount,
 } = require("../services/studentProfile.service")
@@ -173,6 +174,47 @@ router.post(
                 message:
                     error.message ||
                     "Failed to upload profile photo.",
+            })
+        }
+    }
+)
+
+
+/* ============================================================= */
+/* REMOVE PROFILE PHOTO                                          */
+/* ============================================================= */
+
+/*
+    DELETE /api/profile/me/photo
+*/
+
+router.delete(
+    "/me/photo",
+    requireAuth,
+    async (req, res) => {
+        try {
+            const data =
+                await removeProfilePhoto(
+                    req.userId
+                )
+
+            return res.json({
+                success: true,
+                data,
+            })
+        } catch (error) {
+            console.error(
+                "Profile photo remove error:",
+                error
+            )
+
+            return res.status(
+                error.statusCode || 500
+            ).json({
+                success: false,
+                message:
+                    error.message ||
+                    "Failed to remove profile photo.",
             })
         }
     }
