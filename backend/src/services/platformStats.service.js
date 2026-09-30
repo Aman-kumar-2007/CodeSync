@@ -18,6 +18,7 @@ const {
 
 const {
     getGithubStats,
+    getGithubContributions,
     saveGithubDailyActivity,
 } = require("./platforms/github.service")
 
