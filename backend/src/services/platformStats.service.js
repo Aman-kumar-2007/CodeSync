@@ -423,26 +423,48 @@ const saveGithubStats = async (userId) => {
         error: accountError,
     } = await supabase
         .from("platform_accounts")
-        .select("id, username, access_token")
+        .select(
+            "id, username, access_token"
+        )
         .eq("user_id", userId)
         .eq("platform", "GITHUB")
-        .eq("verification_status", "VERIFIED")
+        .eq(
+            "verification_status",
+            "VERIFIED"
+        )
         .single()
 
-    if (accountError) {
+    if (
+        accountError ||
+        !platformAccount
+    ) {
+        console.error(
+            "GitHub platform account query error:",
+            accountError
+        )
+
         throw new Error(
-            `GitHub account query failed: ${accountError.message}`
+            "Verified GitHub account not found."
         )
     }
 
-    const stats = await getGithubStats(
+    if (!platformAccount.access_token) {
+        throw new Error(
+            "GitHub access token is missing. Please reconnect GitHub."
+        )
+    }
+
+    console.log(
+        "GitHub sync:",
         platformAccount.username,
-        platformAccount.access_token
+        "token present:",
+        !!platformAccount.access_token
     )
 
-    const contributionData =
-        await getGithubContributions(
-            platformAccount.username
+    const stats =
+        await getGithubStats(
+            platformAccount.username,
+            platformAccount.access_token
         )
 
     const {
@@ -456,19 +478,24 @@ const saveGithubStats = async (userId) => {
                     platformAccount.id,
 
                 problems_solved: 0,
+
                 basic_solved: 0,
+
                 easy_solved: 0,
+
                 medium_solved: 0,
+
                 hard_solved: 0,
+
                 contest_count: 0,
 
-                contributions:
-                    contributionData.totalContributions,
+                contributions: 0,
 
                 repository_count:
                     stats.repositories,
 
                 current_rating: null,
+
                 max_rating: null,
 
                 recorded_at:
@@ -491,22 +518,51 @@ const saveGithubStats = async (userId) => {
         )
     }
 
-    const activities =
-        contributionData.contributions.map(
-            (day) => ({
-                date: day.date,
-                contributionCount:
-                    day.count,
-            })
+    /*
+     * Contributions don't use GitHub REST API,
+     * so username is enough here.
+     */
+    const dailyActivity =
+        await saveGithubDailyActivity(
+            userId,
+            platformAccount.username
         )
 
-    await saveDailyActivity(
-        userId,
-        "GITHUB",
-        activities
-    )
+    const {
+        error:
+            contributionUpdateError,
+    } = await supabase
+        .from("platform_stats")
+        .update({
+            contributions:
+                dailyActivity.totalContributions,
 
-    return data
+            updated_at:
+                new Date().toISOString(),
+        })
+        .eq(
+            "platform_account_id",
+            platformAccount.id
+        )
+
+    if (contributionUpdateError) {
+        throw new Error(
+            `Failed to update GitHub contributions: ${contributionUpdateError.message}`
+        )
+    }
+
+    return {
+        ...data,
+
+        pullRequests:
+            stats.pullRequests,
+
+        followers:
+            stats.followers,
+
+        following:
+            stats.following,
+    }
 }
 
 module.exports = {

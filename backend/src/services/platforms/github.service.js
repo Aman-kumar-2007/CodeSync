@@ -1,48 +1,62 @@
 const { saveDailyActivity } = require("../dailyActivity.service")
 
-const supabase = require("../../config/supabase")
+const GITHUB_API = "https://api.github.com"
 
-const GITHUB_API =
-    "https://api.github.com"
+/* =========================================================
+   GitHub API Request
+   ========================================================= */
 
-const githubRequest = async (
-    endpoint,
-    accessToken
-) => {
+async function githubRequest(endpoint, accessToken) {
+    if (!accessToken) {
+        throw new Error(
+            "GitHub access token is missing. Please reconnect GitHub."
+        )
+    }
+
     const response = await fetch(
         `${GITHUB_API}${endpoint}`,
         {
             headers: {
-                ...(accessToken
-                    ? {
-                        Authorization:
-                            `Bearer ${accessToken}`,
-                    }
-                    : {}),
-
                 Accept:
                     "application/vnd.github+json",
-
+                Authorization:
+                    `Bearer ${accessToken}`,
                 "X-GitHub-Api-Version":
                     "2022-11-28",
-
                 "User-Agent":
-                    "CodeSync",
+                    "CodeSync/1.0",
             },
         }
     )
 
-    const data = await response.json()
-
     if (!response.ok) {
+        const errorText =
+            await response.text()
+
+        if (response.status === 401) {
+            throw new Error(
+                "GitHub access token is invalid or expired. Please reconnect GitHub."
+            )
+        }
+
+        if (response.status === 403) {
+            throw new Error(
+                `GitHub API rate limit exceeded or access denied. ${errorText}`
+            )
+        }
+
         throw new Error(
-            data.message ||
-            `GitHub API error: ${response.status}`
+            `GitHub API error: ${response.status} ${errorText}`
         )
     }
 
-    return data
+    return response.json()
 }
+
+
+/* =========================================================
+   GitHub User
+   ========================================================= */
 
 const getGithubUser = async (
     accessToken
@@ -52,6 +66,11 @@ const getGithubUser = async (
         accessToken
     )
 }
+
+
+/* =========================================================
+   GitHub Repositories
+   ========================================================= */
 
 const getGithubRepositories = async (
     accessToken
@@ -79,6 +98,11 @@ const getGithubRepositories = async (
     return repositories
 }
 
+
+/* =========================================================
+   GitHub Pull Requests
+   ========================================================= */
+
 const getGithubPullRequests = async (
     username,
     accessToken
@@ -97,13 +121,25 @@ const getGithubPullRequests = async (
     return data.total_count || 0
 }
 
+
+/* =========================================================
+   GitHub Stats
+   ========================================================= */
+
 const getGithubStats = async (
     username,
     accessToken
 ) => {
-    const user = await getGithubUser(
-        accessToken
-    )
+    if (!accessToken) {
+        throw new Error(
+            "GitHub access token missing while fetching stats."
+        )
+    }
+
+    const user =
+        await getGithubUser(
+            accessToken
+        )
 
     const repositories =
         await getGithubRepositories(
@@ -117,7 +153,8 @@ const getGithubStats = async (
         )
 
     return {
-        username: user.login,
+        username:
+            user.login,
 
         profileUrl:
             user.html_url,
@@ -141,58 +178,93 @@ const getGithubStats = async (
     }
 }
 
-const getGithubContributions = async (username) => {
-    const response = await fetch(
-        `https://github.com/users/${encodeURIComponent(username)}/contributions`,
-        {
-            headers: {
-                "User-Agent": "CodeSync/1.0",
-                Accept: "text/html",
-            },
-        }
-    )
+
+/* =========================================================
+   GitHub Contributions
+   ========================================================= */
+
+const getGithubContributions = async (
+    username
+) => {
+    const response =
+        await fetch(
+            `https://github.com/users/${encodeURIComponent(
+                username
+            )}/contributions`,
+            {
+                headers: {
+                    "User-Agent":
+                        "CodeSync/1.0",
+                    Accept:
+                        "text/html",
+                },
+            }
+        )
 
     if (!response.ok) {
-        throw new Error(`GitHub contributions HTTP error: ${response.status}`)
+        throw new Error(
+            `GitHub contributions HTTP error: ${response.status}`
+        )
     }
 
-    const html = await response.text()
+    const html =
+        await response.text()
 
     const contributions = []
 
-    // GitHub contribution cells
     const cellRegex =
         /<td\b[^>]*data-date="([^"]+)"[^>]*id="([^"]+)"[^>]*>[\s\S]*?<\/td>/gi
 
     let match
 
-    while ((match = cellRegex.exec(html)) !== null) {
+    while (
+        (match =
+            cellRegex.exec(html)) !==
+        null
+    ) {
         const date = match[1]
         const cellId = match[2]
 
-        // Find the tooltip connected to this cell
-        const escapedId = cellId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        const escapedId =
+            cellId.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&"
+            )
 
-        const tooltipRegex = new RegExp(
-            `<tool-tip[^>]*for="${escapedId}"[^>]*>([\\s\\S]*?)<\\/tool-tip>`,
-            "i"
-        )
+        const tooltipRegex =
+            new RegExp(
+                `<tool-tip[^>]*for="${escapedId}"[^>]*>([\\s\\S]*?)<\\/tool-tip>`,
+                "i"
+            )
 
-        const tooltipMatch = html.match(tooltipRegex)
+        const tooltipMatch =
+            html.match(
+                tooltipRegex
+            )
 
         let count = 0
 
         if (tooltipMatch) {
-            const tooltipText = tooltipMatch[1]
-                .replace(/<[^>]*>/g, "")
-                .trim()
+            const tooltipText =
+                tooltipMatch[1]
+                    .replace(
+                        /<[^>]*>/g,
+                        ""
+                    )
+                    .trim()
 
-            const countMatch = tooltipText.match(
-                /(\d[\d,]*)\s+contributions?/i
-            )
+            const countMatch =
+                tooltipText.match(
+                    /(\d[\d,]*)\s+contributions?/i
+                )
 
             if (countMatch) {
-                count = Number(countMatch[1].replace(/,/g, ""))
+                count = Number(
+                    countMatch[1].replace(
+                        /,/g,
+                        ""
+                    )
+                )
             }
         }
 
@@ -202,49 +274,80 @@ const getGithubContributions = async (username) => {
         })
     }
 
-    // Remove duplicate dates
-    const uniqueContributions = Array.from(
-        new Map(
-            contributions.map((item) => [item.date, item])
-        ).values()
+    const uniqueContributions =
+        Array.from(
+            new Map(
+                contributions.map(
+                    (item) => [
+                        item.date,
+                        item,
+                    ]
+                )
+            ).values()
+        )
+
+    uniqueContributions.sort(
+        (a, b) =>
+            a.date.localeCompare(
+                b.date
+            )
     )
 
-    // Sort by date
-    uniqueContributions.sort((a, b) =>
-        a.date.localeCompare(b.date)
-    )
-
-    const totalContributions = uniqueContributions.reduce(
-        (total, day) => total + day.count,
-        0
-    )
+    const totalContributions =
+        uniqueContributions.reduce(
+            (total, day) =>
+                total + day.count,
+            0
+        )
 
     return {
         username,
-        contributions: uniqueContributions,
+        contributions:
+            uniqueContributions,
         totalContributions,
     }
 }
 
-const saveGithubDailyActivity = async (userId, username) => {
-    const data = await getGithubContributions(username)
 
-    const activities = data.contributions.map((day) => ({
-        date: day.date,
-        contributionCount: day.count,
-    }))
+/* =========================================================
+   Save GitHub Daily Activity
+   ========================================================= */
 
-    const result = await saveDailyActivity(
+const saveGithubDailyActivity =
+    async (
         userId,
-        "GITHUB",
-        activities
-    )
+        username
+    ) => {
+        const data =
+            await getGithubContributions(
+                username
+            )
 
-    return {
-        ...result,
-        totalContributions: data.totalContributions,
+        const activities =
+            data.contributions.map(
+                (day) => ({
+                    date:
+                        day.date,
+                    contributionCount:
+                        day.count,
+                })
+            )
+
+        const result =
+            await saveDailyActivity(
+                userId,
+                "GITHUB",
+                activities
+            )
+
+        return {
+            ...result,
+            totalContributions:
+                data.totalContributions,
+        }
     }
-}
+
+
 module.exports = {
     getGithubUser,
     getGithubRepositories,
