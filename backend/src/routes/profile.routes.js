@@ -1,7 +1,7 @@
 const express = require("express")
 const multer = require("multer")
 
-const requireAuth = require("../middleware/auth.middleware")
+const requireAuth = require("../middleware/requireAuth")
 
 const {
     getStudentProfile,
@@ -9,6 +9,7 @@ const {
     updateMyProfile,
     uploadProfilePhoto,
     removeProfilePhoto,
+    removePlatformAccount,
     saveSocialAccount,
     removeSocialAccount,
 } = require("../services/studentProfile.service")
@@ -49,12 +50,7 @@ const upload = multer({
 
 /* ============================================================= */
 /* MY PROFILE                                                    */
-/* IMPORTANT: /me MUST COME BEFORE /:username                    */
 /* ============================================================= */
-
-/*
-    GET /api/profile/me
-*/
 
 router.get(
     "/me",
@@ -62,9 +58,7 @@ router.get(
     async (req, res) => {
         try {
             const data =
-                await getMyProfile(
-                    req.userId
-                )
+                await getMyProfile(req.userId)
 
             return res.json({
                 success: true,
@@ -92,10 +86,6 @@ router.get(
 /* ============================================================= */
 /* UPDATE MY PROFILE                                             */
 /* ============================================================= */
-
-/*
-    PUT /api/profile/me
-*/
 
 router.put(
     "/me",
@@ -138,13 +128,6 @@ router.put(
 /* UPLOAD PROFILE PHOTO                                          */
 /* ============================================================= */
 
-/*
-    POST /api/profile/me/photo
-
-    Form field:
-    photo
-*/
-
 router.post(
     "/me/photo",
     requireAuth,
@@ -184,10 +167,6 @@ router.post(
 /* REMOVE PROFILE PHOTO                                          */
 /* ============================================================= */
 
-/*
-    DELETE /api/profile/me/photo
-*/
-
 router.delete(
     "/me/photo",
     requireAuth,
@@ -222,12 +201,46 @@ router.delete(
 
 
 /* ============================================================= */
-/* SAVE SOCIAL ACCOUNT                                           */
+/* DISCONNECT CODING PLATFORM                                   */
 /* ============================================================= */
 
-/*
-    POST /api/profile/me/social
-*/
+router.delete(
+    "/me/platform/:platform",
+    requireAuth,
+    async (req, res) => {
+        try {
+            const data =
+                await removePlatformAccount(
+                    req.userId,
+                    req.params.platform
+                )
+
+            return res.json({
+                success: true,
+                data,
+            })
+        } catch (error) {
+            console.error(
+                "Platform disconnect error:",
+                error
+            )
+
+            return res.status(
+                error.statusCode || 500
+            ).json({
+                success: false,
+                message:
+                    error.message ||
+                    "Failed to disconnect platform.",
+            })
+        }
+    }
+)
+
+
+/* ============================================================= */
+/* SAVE SOCIAL ACCOUNT                                           */
+/* ============================================================= */
 
 router.post(
     "/me/social",
@@ -270,12 +283,8 @@ router.post(
 
 
 /* ============================================================= */
-/* REMOVE SOCIAL ACCOUNT                                         */
+/* REMOVE SOCIAL ACCOUNT                                        */
 /* ============================================================= */
-
-/*
-    DELETE /api/profile/me/social/:platform
-*/
 
 router.delete(
     "/me/social/:platform",
@@ -313,15 +322,8 @@ router.delete(
 
 /* ============================================================= */
 /* PUBLIC STUDENT PROFILE                                       */
-/* IMPORTANT: KEEP THIS LAST                                    */
+/* IMPORTANT: KEEP LAST                                         */
 /* ============================================================= */
-
-/*
-    GET /api/profile/:username
-
-    Example:
-    /api/profile/aman
-*/
 
 router.get(
     "/:username",
@@ -361,7 +363,6 @@ router.get(
 
 router.use(
     (error, req, res, next) => {
-
         if (
             error instanceof multer.MulterError
         ) {
@@ -377,7 +378,6 @@ router.use(
             }
         }
 
-
         if (error) {
             return res.status(400).json({
                 success: false,
@@ -386,7 +386,6 @@ router.use(
                     "File upload failed.",
             })
         }
-
 
         next()
     }

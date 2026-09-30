@@ -24,12 +24,13 @@ import {
     AlertCircle,
     BriefcaseBusiness,
     Globe2,
+    Trash2,
 } from "lucide-react"
 
 import { supabase } from "../lib/supabase"
 
 
-const API_BASE_URL = "https://codesync-su2x.onrender.com"
+const API_BASE_URL = "http://localhost:5001"
 
 
 /* ============================================================= */
@@ -136,6 +137,21 @@ function StudentProfile() {
         useState("")
 
     const [savingSocial, setSavingSocial] =
+        useState(false)
+
+    const [platformAction, setPlatformAction] =
+        useState("")
+
+    const [platformModal, setPlatformModal] =
+        useState(null)
+
+    const [platformUsername, setPlatformUsername] =
+        useState("")
+
+    const [platformVerification, setPlatformVerification] =
+        useState(null)
+
+    const [platformSaving, setPlatformSaving] =
         useState(false)
 
 
@@ -647,21 +663,27 @@ function StudentProfile() {
     }
 
 
+    /* ========================================================= */
+    /* PROFILE PHOTO REMOVE                                      */
+    /* ========================================================= */
+
     const handleRemovePhoto = async () => {
+        if (!profile?.avatar) return
+
+        if (!window.confirm("Remove your profile photo?")) {
+            return
+        }
+
         try {
             setUploadingPhoto(true)
             setError("")
 
             const {
-                data: {
-                    session,
-                },
+                data: { session },
             } = await supabase.auth.getSession()
 
             if (!session?.access_token) {
-                throw new Error(
-                    "Authentication session not found."
-                )
+                throw new Error("Authentication session not found.")
             }
 
             const response = await fetch(
@@ -669,22 +691,16 @@ function StudentProfile() {
                 {
                     method: "DELETE",
                     headers: {
-                        Authorization:
-                            `Bearer ${session.access_token}`,
+                        Authorization: `Bearer ${session.access_token}`,
                     },
                 }
             )
 
-            const result =
-                await response.json()
+            const result = await response.json()
 
-            if (
-                !response.ok ||
-                !result.success
-            ) {
+            if (!response.ok || !result.success) {
                 throw new Error(
-                    result.message ||
-                    "Failed to remove profile photo."
+                    result.message || "Failed to remove profile photo."
                 )
             }
 
@@ -693,19 +709,253 @@ function StudentProfile() {
                 avatar: null,
             }))
         } catch (error) {
-            console.error(
-                "Profile photo remove error:",
-                error
-            )
-
-            setError(
-                error.message ||
-                "Failed to remove profile photo."
-            )
+            console.error("Profile photo remove error:", error)
+            setError(error.message || "Failed to remove profile photo.")
         } finally {
             setUploadingPhoto(false)
         }
     }
+
+
+    /* ========================================================= */
+    /* CODING PLATFORM CONNECT / DISCONNECT                      */
+    /* ========================================================= */
+
+    const closePlatformModal = () => {
+        if (platformSaving) return
+
+        setPlatformModal(null)
+        setPlatformUsername("")
+        setPlatformVerification(null)
+    }
+
+    const handlePlatformDisconnect = async (platformId) => {
+        if (!window.confirm(`Disconnect your ${platformId} account?`)) {
+            return
+        }
+
+        try {
+            setPlatformAction(platformId)
+            setError("")
+
+            const {
+                data: { session },
+            } = await supabase.auth.getSession()
+
+            if (!session?.access_token) {
+                throw new Error("Authentication session not found.")
+            }
+
+            const response = await fetch(
+                `${API_BASE_URL}/api/profile/me/platform/${platformId}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                }
+            )
+
+            const result = await response.json()
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.message || result.error ||
+                    "Failed to disconnect platform."
+                )
+            }
+
+            await fetchProfile()
+        } catch (error) {
+            console.error("Platform disconnect error:", error)
+            setError(error.message || "Failed to disconnect platform.")
+        } finally {
+            setPlatformAction("")
+        }
+    }
+
+    const handlePlatformConnect = async (platform) => {
+        try {
+            setError("")
+
+            const {
+                data: { session },
+            } = await supabase.auth.getSession()
+
+            if (!session?.access_token) {
+                throw new Error("Authentication session not found.")
+            }
+
+            if (platform.id === "GITHUB") {
+                const response = await fetch(
+                    `${API_BASE_URL}/api/verification/github/start`,
+                    {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                        },
+                    }
+                )
+
+                const result = await response.json()
+
+                if (!response.ok || !result.authorizationUrl) {
+                    throw new Error(
+                        result.error || "Unable to start GitHub connection."
+                    )
+                }
+
+                const popup = window.open(
+                    result.authorizationUrl,
+                    "codesync-github",
+                    "width=600,height=700,resizable=yes,scrollbars=yes"
+                )
+
+                if (!popup) {
+                    throw new Error("Please allow popups to connect GitHub.")
+                }
+
+                const startedAt = Date.now()
+                const timer = setInterval(async () => {
+                    if (popup.closed || Date.now() - startedAt > 120000) {
+                        clearInterval(timer)
+                        await fetchProfile()
+                        return
+                    }
+
+                    try {
+                        const profileResponse = await fetch(
+                            `${API_BASE_URL}/api/profile/me`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${session.access_token}`,
+                                },
+                            }
+                        )
+
+                        const profileResult = await profileResponse.json()
+                        const github =
+                            profileResult?.data?.platforms?.GITHUB
+
+                        if (github?.username) {
+                            clearInterval(timer)
+                            if (!popup.closed) popup.close()
+                            setProfile((prev) => ({
+                                ...prev,
+                                platforms: profileResult.data.platforms || {},
+                            }))
+                        }
+                    } catch {
+                        // Keep polling until timeout or popup close.
+                    }
+                }, 2000)
+
+                return
+            }
+
+            setPlatformModal(platform)
+            setPlatformUsername("")
+            setPlatformVerification(null)
+        } catch (error) {
+            console.error("Platform connect error:", error)
+            setError(error.message || "Failed to connect platform.")
+        }
+    }
+
+    const startPlatformVerification = async (event) => {
+        event.preventDefault()
+
+        if (!platformModal || !platformUsername.trim()) return
+
+        try {
+            setPlatformSaving(true)
+            setError("")
+
+            const {
+                data: { session },
+            } = await supabase.auth.getSession()
+
+            if (!session?.access_token) {
+                throw new Error("Authentication session not found.")
+            }
+
+            const response = await fetch(
+                `${API_BASE_URL}/api/verification/${platformModal.id.toLowerCase()}/start`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                    body: JSON.stringify({
+                        username: platformUsername.trim(),
+                    }),
+                }
+            )
+
+            const result = await response.json()
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.error || "Unable to start verification."
+                )
+            }
+
+            setPlatformVerification({
+                code: result.verificationCode,
+                instructions: result.instructions,
+            })
+        } catch (error) {
+            console.error("Platform verification start error:", error)
+            setError(error.message || "Unable to start verification.")
+        } finally {
+            setPlatformSaving(false)
+        }
+    }
+
+    const verifyPlatformConnection = async () => {
+        if (!platformModal) return
+
+        try {
+            setPlatformSaving(true)
+            setError("")
+
+            const {
+                data: { session },
+            } = await supabase.auth.getSession()
+
+            if (!session?.access_token) {
+                throw new Error("Authentication session not found.")
+            }
+
+            const response = await fetch(
+                `${API_BASE_URL}/api/verification/${platformModal.id.toLowerCase()}/verify`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                }
+            )
+
+            const result = await response.json()
+
+            if (!response.ok || result.status !== "VERIFIED") {
+                throw new Error(
+                    result.error || "Verification failed. Please try again."
+                )
+            }
+
+            closePlatformModal()
+            await fetchProfile()
+        } catch (error) {
+            console.error("Platform verification error:", error)
+            setError(error.message || "Verification failed.")
+        } finally {
+            setPlatformSaving(false)
+        }
+    }
+
 
     /* ========================================================= */
     /* SOCIAL CONNECT                                            */
@@ -1388,6 +1638,13 @@ function StudentProfile() {
                                         Icon={
                                             Icon
                                         }
+                                        onConnect={() =>
+                                            handlePlatformConnect(platform)
+                                        }
+                                        onDisconnect={() =>
+                                            handlePlatformDisconnect(platform.id)
+                                        }
+                                        platformAction={platformAction}
                                     />
                                 )
                             }
@@ -1617,6 +1874,18 @@ function StudentProfile() {
                                     </label>
 
 
+                                    {profile.avatar && (
+                                        <button
+                                            type="button"
+                                            onClick={handleRemovePhoto}
+                                            disabled={uploadingPhoto}
+                                            className="absolute bottom-0 left-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#0d131f] bg-red-500 text-white shadow-lg transition hover:bg-red-400 disabled:opacity-50"
+                                            title="Remove photo"
+                                        >
+                                            <Trash2 size={13} />
+                                        </button>
+                                    )}
+
                                     <input
                                         id="profile-photo"
                                         type="file"
@@ -1637,32 +1906,11 @@ function StudentProfile() {
                                     Profile Photo
                                 </p>
 
-                                <div className="mt-2 flex items-center gap-3">
-                                    <label
-                                        htmlFor="profile-photo"
-                                        className={`cursor-pointer text-[10px] font-medium text-primary hover:text-indigo-400 ${uploadingPhoto
-                                                ? "pointer-events-none opacity-50"
-                                                : ""
-                                            }`}
-                                    >
-                                        Change Photo
-                                    </label>
-
-                                    {profile.avatar && (
-                                        <button
-                                            type="button"
-                                            onClick={handleRemovePhoto}
-                                            disabled={uploadingPhoto}
-                                            className="text-[10px] font-medium text-red-400 hover:text-red-300 disabled:opacity-50"
-                                        >
-                                            Remove Photo
-                                        </button>
-                                    )}
-                                </div>
 
                                 <p className="mt-1 text-[10px] text-muted-foreground">
                                     JPG, PNG or WEBP · Max 5MB
                                 </p>
+
                             </div>
 
 
@@ -1860,6 +2108,113 @@ function StudentProfile() {
                 </ModalOverlay>
             )}
 
+
+            {/* ===================================================== */}
+            {/* CODING PLATFORM CONNECT MODAL                        */}
+            {/* ===================================================== */}
+
+            {platformModal && (
+                <ModalOverlay onClose={closePlatformModal}>
+                    <div className="w-full">
+                        <ModalHeader
+                            title={`Connect ${platformModal.name}`}
+                            description={
+                                platformVerification
+                                    ? "Complete the verification steps, then verify your account."
+                                    : `Connect your ${platformModal.name} account to CodeSync.`
+                            }
+                            onClose={closePlatformModal}
+                        />
+
+                        <div className="p-6">
+                            {!platformVerification ? (
+                                <form onSubmit={startPlatformVerification}>
+                                    <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                        Username
+                                    </label>
+
+                                    <div className="flex h-12 items-center rounded-xl border border-border bg-[#101622] px-4">
+                                        <span className="font-mono text-sm text-slate-500">@</span>
+                                        <input
+                                            autoFocus
+                                            value={platformUsername}
+                                            onChange={(event) =>
+                                                setPlatformUsername(event.target.value)
+                                            }
+                                            disabled={platformSaving}
+                                            placeholder={`${platformModal.name} username`}
+                                            className="w-full bg-transparent px-2 text-sm text-foreground outline-none placeholder:text-slate-600"
+                                        />
+                                    </div>
+
+                                    <div className="mt-6 flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={closePlatformModal}
+                                            disabled={platformSaving}
+                                            className="h-11 flex-1 rounded-xl border border-border bg-secondary text-sm font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
+                                        >
+                                            Cancel
+                                        </button>
+
+                                        <button
+                                            type="submit"
+                                            disabled={platformSaving || !platformUsername.trim()}
+                                            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+                                        >
+                                            {platformSaving ? (
+                                                <Loader2 size={15} className="animate-spin" />
+                                            ) : (
+                                                "Generate Code"
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            ) : (
+                                <div>
+                                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 text-center">
+                                        <p className="text-xs font-semibold text-muted-foreground">
+                                            Verification Code
+                                        </p>
+                                        <p className="mt-2 font-mono text-2xl font-extrabold tracking-[0.2em] text-primary">
+                                            {platformVerification.code}
+                                        </p>
+                                    </div>
+
+                                    <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                                        {platformVerification.instructions}
+                                    </p>
+
+                                    <div className="mt-6 flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={closePlatformModal}
+                                            disabled={platformSaving}
+                                            className="h-11 flex-1 rounded-xl border border-border bg-secondary text-sm font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
+                                        >
+                                            Cancel
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={verifyPlatformConnection}
+                                            disabled={platformSaving}
+                                            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+                                        >
+                                            {platformSaving ? (
+                                                <Loader2 size={15} className="animate-spin" />
+                                            ) : (
+                                                <ShieldCheck size={15} />
+                                            )}
+                                            Verify Account
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </ModalOverlay>
+            )}
 
             {/* ===================================================== */}
             {/* SOCIAL MODAL                                         */}
@@ -2111,91 +2466,41 @@ function CodingAccountCard({
     platform,
     account,
     Icon,
+    onConnect,
+    onDisconnect,
+    platformAction,
 }) {
-
-    const connected =
-        Boolean(
-            account?.username
-        )
-
+    const connected = Boolean(account?.username)
 
     return (
         <div className="rounded-xl border border-border bg-[#0d131f] p-5 transition-all duration-200 hover:border-primary/25">
-
             <div className="flex items-start justify-between">
-
                 <div className="flex items-center gap-3">
-
-                    <div
-                        className={`flex h-11 w-11 items-center justify-center rounded-xl ${platform.bgClass} ${platform.iconClass}`}
-                    >
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${platform.bgClass} ${platform.iconClass}`}>
                         <Icon size={20} />
                     </div>
-
-
                     <div>
-
-                        <p className="text-sm font-bold">
-                            {platform.name}
-                        </p>
-
-
+                        <p className="text-sm font-bold">{platform.name}</p>
                         <div className="mt-1.5 flex items-center gap-2">
-
-                            <span
-                                className={`h-2 w-2 rounded-full ${connected
-                                    ? "bg-emerald-400"
-                                    : "bg-slate-600"
-                                    }`}
-                            />
-
-
-                            <span
-                                className={`text-xs font-medium ${connected
-                                    ? "text-emerald-400"
-                                    : "text-muted-foreground"
-                                    }`}
-                            >
-                                {connected
-                                    ? "Connected"
-                                    : "Not connected"}
+                            <span className={`h-2 w-2 rounded-full ${connected ? "bg-emerald-400" : "bg-slate-600"}`} />
+                            <span className={`text-xs font-medium ${connected ? "text-emerald-400" : "text-muted-foreground"}`}>
+                                {connected ? "Connected" : "Not connected"}
                             </span>
-
                         </div>
-
                     </div>
-
                 </div>
 
-
-                {connected && (
-                    <Check
-                        size={16}
-                        className="text-emerald-400"
-                    />
-                )}
-
+                {connected && <Check size={16} className="text-emerald-400" />}
             </div>
 
-
             {connected ? (
-
                 <>
-
                     <div className="mt-5 flex items-center justify-between">
-
                         <span className="font-mono text-xs text-muted-foreground">
                             @{account.username}
                         </span>
-
-
                         <a
-                            href={
-                                account.profileUrl ||
-                                platform.buildUrl(
-                                    account.username
-                                )
-                            }
+                            href={account.profileUrl || platform.buildUrl(account.username)}
                             target="_blank"
                             rel="noreferrer"
                             className="text-muted-foreground transition-colors hover:text-foreground"
@@ -2203,62 +2508,62 @@ function CodingAccountCard({
                         >
                             <ExternalLink size={16} />
                         </a>
-
                     </div>
-
 
                     <div className="mt-4 grid grid-cols-2 gap-2">
-
                         <div className="rounded-lg border border-border bg-secondary/40 p-2.5">
-
                             <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                                {platform.id === "GITHUB"
-                                    ? "Contributions"
-                                    : "Solved"}
+                                {platform.id === "GITHUB" ? "Contributions" : "Solved"}
                             </p>
-
                             <p className="mt-1 text-sm font-bold">
-                                {platform.id === "GITHUB"
-                                    ? account.contributions ?? 0
-                                    : account.solved ?? 0}
+                                {platform.id === "GITHUB" ? account.contributions ?? 0 : account.solved ?? 0}
                             </p>
-
                         </div>
 
-                        {account.rating !==
-                            null &&
-                            account.rating !==
-                            undefined && (
-
-                                <div className="rounded-lg border border-border bg-secondary/40 p-2.5">
-
-                                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                                        Rating
-                                    </p>
-
-
-                                    <p className="mt-1 text-sm font-bold">
-                                        {
-                                            account.rating
-                                        }
-                                    </p>
-
-                                </div>
-
-                            )}
-
+                        {account.rating !== null && account.rating !== undefined && (
+                            <div className="rounded-lg border border-border bg-secondary/40 p-2.5">
+                                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Rating</p>
+                                <p className="mt-1 text-sm font-bold">{account.rating}</p>
+                            </div>
+                        )}
                     </div>
 
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={onDisconnect}
+                            disabled={platformAction === platform.id}
+                            className="flex h-9 items-center justify-center gap-2 rounded-lg border border-red-400/20 bg-red-400/5 text-xs font-semibold text-red-400 transition hover:bg-red-400/10 disabled:opacity-50"
+                        >
+                            {platformAction === platform.id ? (
+                                <Loader2 size={13} className="animate-spin" />
+                            ) : (
+                                <Trash2 size={13} />
+                            )}
+                            Disconnect
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={onConnect}
+                            disabled={platformAction === platform.id}
+                            className="flex h-9 items-center justify-center gap-2 rounded-lg border border-border bg-secondary text-xs font-semibold text-muted-foreground transition hover:border-primary/30 hover:text-primary disabled:opacity-50"
+                        >
+                            <Link2 size={13} />
+                            Reconnect
+                        </button>
+                    </div>
                 </>
-
             ) : (
-
-                <div className="mt-5 flex h-9 w-full items-center justify-center rounded-lg border border-border bg-secondary/50 text-xs font-medium text-muted-foreground">
-                    Not connected
-                </div>
-
+                <button
+                    type="button"
+                    onClick={onConnect}
+                    className="mt-5 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-border bg-secondary text-xs font-semibold text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                >
+                    <Link2 size={13} />
+                    Connect
+                </button>
             )}
-
         </div>
     )
 }

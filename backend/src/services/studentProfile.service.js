@@ -35,14 +35,8 @@ const getStudentProfile = async (username) => {
         )
 
         error.statusCode = 400
-
         throw error
     }
-
-
-    // =====================================================
-    // USER
-    // =====================================================
 
     const {
         data: user,
@@ -68,17 +62,15 @@ const getStudentProfile = async (username) => {
         )
 
         error.statusCode = 404
-
         throw error
     }
-
 
     const userId = user.id
 
 
-    // =====================================================
-    // STUDENT PROFILE
-    // =====================================================
+    /* ========================================================= */
+    /* STUDENT PROFILE                                           */
+    /* ========================================================= */
 
     const {
         data: profile,
@@ -103,9 +95,9 @@ const getStudentProfile = async (username) => {
     }
 
 
-    // =====================================================
-    // VERIFIED PLATFORM ACCOUNTS
-    // =====================================================
+    /* ========================================================= */
+    /* VERIFIED PLATFORM ACCOUNTS                                */
+    /* ========================================================= */
 
     const {
         data: accounts,
@@ -134,9 +126,9 @@ const getStudentProfile = async (username) => {
     }
 
 
-    // =====================================================
-    // PLATFORM STATS
-    // =====================================================
+    /* ========================================================= */
+    /* PLATFORM STATS                                            */
+    /* ========================================================= */
 
     const accountIds =
         (accounts || []).map(
@@ -154,16 +146,16 @@ const getStudentProfile = async (username) => {
             .select(
                 `
                 platform_account_id,
-    problems_solved,
-    basic_solved,
-    easy_solved,
-    medium_solved,
-    hard_solved,
-    current_rating,
-    max_rating,
-    contest_count,
-    contributions,
-    repository_count
+                problems_solved,
+                basic_solved,
+                easy_solved,
+                medium_solved,
+                hard_solved,
+                current_rating,
+                max_rating,
+                contest_count,
+                contributions,
+                repository_count
                 `
             )
             .in(
@@ -236,9 +228,9 @@ const getStudentProfile = async (username) => {
     }
 
 
-    // =====================================================
-    // SOCIAL ACCOUNTS
-    // =====================================================
+    /* ========================================================= */
+    /* SOCIAL ACCOUNTS                                           */
+    /* ========================================================= */
 
     const {
         data: socialAccounts,
@@ -258,7 +250,9 @@ const getStudentProfile = async (username) => {
             socialError.message
         )
     } else {
-        for (const account of socialAccounts || []) {
+        for (
+            const account of socialAccounts || []
+        ) {
             social[account.platform] = {
                 username:
                     account.username,
@@ -270,13 +264,12 @@ const getStudentProfile = async (username) => {
     }
 
 
-    // =====================================================
-    // LEADERBOARD
-    // =====================================================
+    /* ========================================================= */
+    /* LEADERBOARD                                               */
+    /* ========================================================= */
 
     const leaderboardData =
         await getLeaderboard(userId)
-
 
     const leaderboardStudent =
         leaderboardData.leaderboard.find(
@@ -285,9 +278,9 @@ const getStudentProfile = async (username) => {
         )
 
 
-    // =====================================================
-    // ANALYTICS
-    // =====================================================
+    /* ========================================================= */
+    /* ANALYTICS                                                 */
+    /* ========================================================= */
 
     const analytics =
         await getAnalyticsSummary(userId)
@@ -309,9 +302,11 @@ const getStudentProfile = async (username) => {
             studentAnalyticsError.message
         )
     }
-    // =====================================================
-    // CODING ACTIVITY / HEATMAP
-    // =====================================================
+
+
+    /* ========================================================= */
+    /* CODING ACTIVITY                                           */
+    /* ========================================================= */
 
     const activity =
         await getCombinedDailyActivity(
@@ -319,9 +314,9 @@ const getStudentProfile = async (username) => {
         )
 
 
-    // =====================================================
-    // FINAL RESPONSE
-    // =====================================================
+    /* ========================================================= */
+    /* FINAL RESPONSE                                            */
+    /* ========================================================= */
 
     return {
         profile: {
@@ -343,7 +338,6 @@ const getStudentProfile = async (username) => {
                 null,
         },
 
-
         ranking: {
             rank:
                 leaderboardStudent?.rank ||
@@ -358,7 +352,6 @@ const getStudentProfile = async (username) => {
                 0,
         },
 
-
         streak: {
             current:
                 studentAnalytics?.current_streak ??
@@ -369,7 +362,6 @@ const getStudentProfile = async (username) => {
                 studentAnalytics?.max_streak ??
                 0,
         },
-
 
         platforms,
 
@@ -405,10 +397,8 @@ const getMyProfile = async (userId) => {
         )
 
         error.statusCode = 400
-
         throw error
     }
-
 
     const {
         data: user,
@@ -425,7 +415,6 @@ const getMyProfile = async (userId) => {
         )
     }
 
-
     return getStudentProfile(
         user.username
     )
@@ -436,33 +425,50 @@ const getMyProfile = async (userId) => {
 /* UPDATE MY PROFILE                                             */
 /* ============================================================= */
 
-const updateMyProfile = async (userId, { fullName }) => {
+const updateMyProfile = async (
+    userId,
+    { fullName }
+) => {
     if (!userId) {
-        const error = new Error("User ID is required.")
+        const error = new Error(
+            "User ID is required."
+        )
+
         error.statusCode = 400
         throw error
     }
 
-    const name = fullName?.trim()
+    const name =
+        fullName?.trim()
 
     if (!name) {
-        const error = new Error("Full name is required.")
+        const error = new Error(
+            "Full name is required."
+        )
+
         error.statusCode = 400
         throw error
     }
 
-    const { error } = await supabase
-        .from("student_profiles")
-        .upsert(
-            {
-                user_id: userId,
-                full_name: name,
-                branch: "CSE",
-            },
-            {
-                onConflict: "user_id",
-            }
-        )
+    const { error } =
+        await supabase
+            .from("student_profiles")
+            .upsert(
+                {
+                    user_id:
+                        userId,
+
+                    full_name:
+                        name,
+
+                    branch:
+                        "CSE",
+                },
+                {
+                    onConflict:
+                        "user_id",
+                }
+            )
 
     if (error) {
         throw new Error(
@@ -475,7 +481,7 @@ const updateMyProfile = async (userId, { fullName }) => {
 
 
 /* ============================================================= */
-/* UPLOAD PROFILE PHOTO                                         */
+/* UPLOAD PROFILE PHOTO                                          */
 /* ============================================================= */
 
 const uploadProfilePhoto = async (
@@ -488,10 +494,8 @@ const uploadProfilePhoto = async (
         )
 
         error.statusCode = 400
-
         throw error
     }
-
 
     if (!file) {
         const error = new Error(
@@ -499,17 +503,13 @@ const uploadProfilePhoto = async (
         )
 
         error.statusCode = 400
-
         throw error
     }
 
-
-    // -----------------------------------------------------
-    // Validate MIME type
-    // -----------------------------------------------------
-
     const extension =
-        ALLOWED_IMAGE_TYPES[file.mimetype]
+        ALLOWED_IMAGE_TYPES[
+            file.mimetype
+        ]
 
     if (!extension) {
         const error = new Error(
@@ -517,14 +517,8 @@ const uploadProfilePhoto = async (
         )
 
         error.statusCode = 400
-
         throw error
     }
-
-
-    // -----------------------------------------------------
-    // Validate file size
-    // -----------------------------------------------------
 
     if (file.size > MAX_IMAGE_SIZE) {
         const error = new Error(
@@ -532,14 +526,11 @@ const uploadProfilePhoto = async (
         )
 
         error.statusCode = 400
-
         throw error
     }
 
 
-    // -----------------------------------------------------
-    // Remove previous possible profile images
-    // -----------------------------------------------------
+    /* Remove previous images */
 
     const possibleOldFiles = [
         `${userId}/profile.jpg`,
@@ -547,14 +538,14 @@ const uploadProfilePhoto = async (
         `${userId}/profile.webp`,
     ]
 
-
     const {
         error: removeError,
     } = await supabase
         .storage
         .from(PROFILE_BUCKET)
-        .remove(possibleOldFiles)
-
+        .remove(
+            possibleOldFiles
+        )
 
     if (removeError) {
         console.warn(
@@ -564,13 +555,10 @@ const uploadProfilePhoto = async (
     }
 
 
-    // -----------------------------------------------------
-    // Upload new image
-    // -----------------------------------------------------
+    /* Upload new image */
 
     const filePath =
         `${userId}/profile.${extension}`
-
 
     const {
         error: uploadError,
@@ -592,7 +580,6 @@ const uploadProfilePhoto = async (
             }
         )
 
-
     if (uploadError) {
         throw new Error(
             `Failed to upload profile photo: ${uploadError.message}`
@@ -600,21 +587,19 @@ const uploadProfilePhoto = async (
     }
 
 
-    // -----------------------------------------------------
-    // Get public URL
-    // -----------------------------------------------------
+    /* Public URL */
 
     const {
         data: publicUrlData,
     } = supabase
         .storage
         .from(PROFILE_BUCKET)
-        .getPublicUrl(filePath)
-
+        .getPublicUrl(
+            filePath
+        )
 
     const profileImage =
         publicUrlData?.publicUrl
-
 
     if (!profileImage) {
         throw new Error(
@@ -623,9 +608,7 @@ const uploadProfilePhoto = async (
     }
 
 
-    // -----------------------------------------------------
-    // Save URL in student_profiles
-    // -----------------------------------------------------
+    /* Save URL */
 
     const {
         error: profileUpdateError,
@@ -640,13 +623,11 @@ const uploadProfilePhoto = async (
             userId
         )
 
-
     if (profileUpdateError) {
         throw new Error(
             `Failed to save profile image: ${profileUpdateError.message}`
         )
     }
-
 
     return {
         success: true,
@@ -654,28 +635,35 @@ const uploadProfilePhoto = async (
     }
 }
 
+
 /* ============================================================= */
 /* REMOVE PROFILE PHOTO                                          */
 /* ============================================================= */
 
-const removeProfilePhoto = async (userId) => {
+const removeProfilePhoto = async (
+    userId
+) => {
     if (!userId) {
-        const error = new Error("User ID is required.")
+        const error = new Error(
+            "User ID is required."
+        )
+
         error.statusCode = 400
         throw error
     }
 
-    const possibleFiles = [
+    const files = [
         `${userId}/profile.jpg`,
         `${userId}/profile.png`,
         `${userId}/profile.webp`,
     ]
 
-    // Remove image files from Supabase Storage
-    const { error: storageError } = await supabase
+    const {
+        error: storageError,
+    } = await supabase
         .storage
         .from(PROFILE_BUCKET)
-        .remove(possibleFiles)
+        .remove(files)
 
     if (storageError) {
         throw new Error(
@@ -683,17 +671,22 @@ const removeProfilePhoto = async (userId) => {
         )
     }
 
-    // Remove image URL from database
-    const { error: profileError } = await supabase
+    const {
+        error: profileError,
+    } = await supabase
         .from("student_profiles")
         .update({
-            profile_image: null,
+            profile_image:
+                null,
         })
-        .eq("user_id", userId)
+        .eq(
+            "user_id",
+            userId
+        )
 
     if (profileError) {
         throw new Error(
-            `Failed to remove profile photo from profile: ${profileError.message}`
+            `Failed to remove profile photo: ${profileError.message}`
         )
     }
 
@@ -705,7 +698,148 @@ const removeProfilePhoto = async (userId) => {
 
 
 /* ============================================================= */
-/* SAVE SOCIAL ACCOUNT                                          */
+/* REMOVE CODING PLATFORM ACCOUNT                                */
+/* ============================================================= */
+
+const removePlatformAccount = async (
+    userId,
+    platform
+) => {
+    if (!userId) {
+        const error = new Error(
+            "User ID is required."
+        )
+
+        error.statusCode = 400
+        throw error
+    }
+
+    const cleanPlatform =
+        platform
+            ?.trim()
+            .toUpperCase()
+
+    const allowedPlatforms = [
+        "LEETCODE",
+        "CODEFORCES",
+        "GFG",
+        "GITHUB",
+    ]
+
+    if (
+        !allowedPlatforms.includes(
+            cleanPlatform
+        )
+    ) {
+        const error = new Error(
+            "Unsupported coding platform."
+        )
+
+        error.statusCode = 400
+        throw error
+    }
+
+
+    /* Find account */
+
+    const {
+        data: account,
+        error: accountError,
+    } = await supabase
+        .from("platform_accounts")
+        .select("id")
+        .eq(
+            "user_id",
+            userId
+        )
+        .eq(
+            "platform",
+            cleanPlatform
+        )
+        .maybeSingle()
+
+    if (accountError) {
+        throw new Error(
+            `Failed to find platform account: ${accountError.message}`
+        )
+    }
+
+    if (!account) {
+        return getMyProfile(userId)
+    }
+
+
+    /* Remove stats */
+
+    const {
+        error: statsError,
+    } = await supabase
+        .from("platform_stats")
+        .delete()
+        .eq(
+            "platform_account_id",
+            account.id
+        )
+
+    if (statsError) {
+        throw new Error(
+            `Failed to remove platform stats: ${statsError.message}`
+        )
+    }
+
+
+    /* Remove daily activity */
+
+    const {
+        error: activityError,
+    } = await supabase
+        .from("daily_activity")
+        .delete()
+        .eq(
+            "user_id",
+            userId
+        )
+        .eq(
+            "platform",
+            cleanPlatform
+        )
+
+    if (activityError) {
+        console.warn(
+            "Platform activity could not be removed:",
+            activityError.message
+        )
+    }
+
+
+    /* Remove account */
+
+    const {
+        error: deleteError,
+    } = await supabase
+        .from("platform_accounts")
+        .delete()
+        .eq(
+            "id",
+            account.id
+        )
+        .eq(
+            "user_id",
+            userId
+        )
+
+    if (deleteError) {
+        throw new Error(
+            `Failed to disconnect platform: ${deleteError.message}`
+        )
+    }
+
+    return getMyProfile(userId)
+}
+
+
+/* ============================================================= */
+/* SAVE SOCIAL ACCOUNT                                           */
 /* ============================================================= */
 
 const saveSocialAccount = async (
@@ -721,25 +855,24 @@ const saveSocialAccount = async (
         )
     }
 
-
     const cleanPlatform =
         platform
             ?.trim()
             .toUpperCase()
 
-
     const cleanUsername =
         username
             ?.trim()
-            .replace(/^@/, "")
-
+            .replace(
+                /^@/,
+                ""
+            )
 
     if (!cleanPlatform) {
         throw new Error(
             "Social platform is required."
         )
     }
-
 
     if (!cleanUsername) {
         throw new Error(
@@ -764,10 +897,11 @@ const saveSocialAccount = async (
 
 
     const profileUrl =
-        buildUrl[cleanPlatform]?.(
+        buildUrl[
+            cleanPlatform
+        ]?.(
             cleanUsername
         )
-
 
     if (!profileUrl) {
         throw new Error(
@@ -800,20 +934,18 @@ const saveSocialAccount = async (
             }
         )
 
-
     if (error) {
         throw new Error(
             `Failed to save social account: ${error.message}`
         )
     }
 
-
     return getMyProfile(userId)
 }
 
 
 /* ============================================================= */
-/* REMOVE SOCIAL ACCOUNT                                        */
+/* REMOVE SOCIAL ACCOUNT                                         */
 /* ============================================================= */
 
 const removeSocialAccount = async (
@@ -826,19 +958,16 @@ const removeSocialAccount = async (
         )
     }
 
-
     const cleanPlatform =
         platform
             ?.trim()
             .toUpperCase()
-
 
     if (!cleanPlatform) {
         throw new Error(
             "Social platform is required."
         )
     }
-
 
     const {
         error,
@@ -854,13 +983,11 @@ const removeSocialAccount = async (
             cleanPlatform
         )
 
-
     if (error) {
         throw new Error(
             `Failed to remove social account: ${error.message}`
         )
     }
-
 
     return getMyProfile(userId)
 }
@@ -876,6 +1003,7 @@ module.exports = {
     updateMyProfile,
     uploadProfilePhoto,
     removeProfilePhoto,
+    removePlatformAccount,
     saveSocialAccount,
     removeSocialAccount,
 }
