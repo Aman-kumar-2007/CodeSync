@@ -39,7 +39,7 @@ const getLeaderboard = async (currentUserId) => {
     ]
 
     // =====================================================
-    // USERNAMES
+    // USERS
     // =====================================================
 
     const {
@@ -58,6 +58,7 @@ const getLeaderboard = async (currentUserId) => {
 
     // =====================================================
     // STUDENT PROFILES
+    // IMPORTANT: profile_image INCLUDED
     // =====================================================
 
     const {
@@ -65,7 +66,9 @@ const getLeaderboard = async (currentUserId) => {
         error: profilesError,
     } = await supabase
         .from("student_profiles")
-        .select("user_id, full_name")
+        .select(
+            "user_id, full_name, profile_image, branch"
+        )
         .in("user_id", userIds)
 
     if (profilesError) {
@@ -137,9 +140,10 @@ const getLeaderboard = async (currentUserId) => {
     const statsByUser = new Map()
 
     for (const stat of platformStats || []) {
-        const userId = accountUserMap.get(
-            stat.platform_account_id
-        )
+        const userId =
+            accountUserMap.get(
+                stat.platform_account_id
+            )
 
         if (!userId) continue
 
@@ -164,19 +168,28 @@ const getLeaderboard = async (currentUserId) => {
             statsByUser.get(userId)
 
         // LeetCode
-        if (account.platform === "LEETCODE") {
+        if (
+            account.platform ===
+            "LEETCODE"
+        ) {
             userStats.leetcodeSolved =
                 stat.problems_solved || 0
         }
 
         // GFG
-        if (account.platform === "GFG") {
+        if (
+            account.platform ===
+            "GFG"
+        ) {
             userStats.gfgSolved =
                 stat.problems_solved || 0
         }
 
         // Codeforces
-        if (account.platform === "CODEFORCES") {
+        if (
+            account.platform ===
+            "CODEFORCES"
+        ) {
             userStats.codeforcesSolved =
                 stat.problems_solved || 0
 
@@ -186,7 +199,7 @@ const getLeaderboard = async (currentUserId) => {
     }
 
     // =====================================================
-    // USER MAP
+    // MAPS
     // =====================================================
 
     const userMap = new Map(
@@ -196,20 +209,12 @@ const getLeaderboard = async (currentUserId) => {
         ])
     )
 
-    // =====================================================
-    // PROFILE MAP
-    // =====================================================
-
     const profileMap = new Map(
         (profiles || []).map((profile) => [
             profile.user_id,
             profile,
         ])
     )
-
-    // =====================================================
-    // ANALYTICS MAP
-    // =====================================================
 
     const analyticsMap = new Map(
         (studentAnalytics || []).map(
@@ -224,77 +229,83 @@ const getLeaderboard = async (currentUserId) => {
     // BUILD LEADERBOARD
     // =====================================================
 
-    const leaderboard = userIds.map((userId) => {
-        const user = userMap.get(userId)
-        const profile = profileMap.get(userId)
+    const leaderboard = userIds.map(
+        (userId) => {
+            const user =
+                userMap.get(userId)
 
-        const userStats =
-            statsByUser.get(userId) || {
-                leetcodeSolved: 0,
-                gfgSolved: 0,
-                codeforcesSolved: 0,
-                codeforcesRating: 0,
-            }
+            const profile =
+                profileMap.get(userId)
 
-        // =================================================
-        // SCORE
-        // =================================================
-        //
-        // LeetCode × 2
-        // + GFG × 1.5
-        // + Codeforces × 1
-        // + max(0, CF rating - 800) × 0.5
-        //
+            const userStats =
+                statsByUser.get(userId) || {
+                    leetcodeSolved: 0,
+                    gfgSolved: 0,
+                    codeforcesSolved: 0,
+                    codeforcesRating: 0,
+                }
 
-        const score =
-            (userStats.leetcodeSolved * 2) +
-            (userStats.gfgSolved * 1.5) +
-            userStats.codeforcesSolved +
-            (
+            // =================================================
+            // SCORE
+            // =================================================
+
+            const score =
+                userStats.leetcodeSolved * 2 +
+                userStats.gfgSolved * 1.5 +
+                userStats.codeforcesSolved +
                 Math.max(
                     0,
                     userStats.codeforcesRating - 800
                 ) * 0.5
-            )
 
-        // =================================================
-        // TOTAL SOLVED
-        // =================================================
+            // =================================================
+            // TOTAL SOLVED
+            // =================================================
 
-        const solved =
-            userStats.leetcodeSolved +
-            userStats.gfgSolved +
-            userStats.codeforcesSolved
+            const solved =
+                userStats.leetcodeSolved +
+                userStats.gfgSolved +
+                userStats.codeforcesSolved
 
-        // =================================================
-        // MAX STREAK
-        // =================================================
+            // =================================================
+            // MAX STREAK
+            // =================================================
 
-        const maxStreak =
-            analyticsMap.get(userId)
-                ?.max_streak || 0
+            const maxStreak =
+                analyticsMap.get(userId)
+                    ?.max_streak || 0
 
-        return {
-            userId,
+            // =================================================
+            // FINAL STUDENT
+            // =================================================
 
-            name:
-                profile?.full_name ||
-                "Student",
+            return {
+                userId,
 
-            username:
-                user?.username ||
-                null,
+                name:
+                    profile?.full_name ||
+                    "Student",
 
-            score,
+                username:
+                    user?.username ||
+                    null,
 
-            solved,
+                // THIS WAS MISSING BEFORE
+                avatar:
+                    profile?.profile_image ||
+                    null,
 
-            maxStreak,
+                score,
+
+                solved,
+
+                maxStreak,
+            }
         }
-    })
+    )
 
     // =====================================================
-    // SORT BY SCORE
+    // SORT
     // =====================================================
 
     leaderboard.sort((a, b) => {
@@ -306,7 +317,9 @@ const getLeaderboard = async (currentUserId) => {
             return b.solved - a.solved
         }
 
-        return a.name.localeCompare(b.name)
+        return a.name.localeCompare(
+            b.name
+        )
     })
 
     // =====================================================
@@ -337,7 +350,8 @@ const getLeaderboard = async (currentUserId) => {
     // =====================================================
 
     return {
-        leaderboard: rankedLeaderboard,
+        leaderboard:
+            rankedLeaderboard,
 
         currentUserRank:
             currentUser?.rank || null,
