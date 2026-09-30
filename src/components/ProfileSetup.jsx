@@ -18,7 +18,8 @@ import {
 import { supabase } from "../lib/supabase"
 
 const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "https://codesync-su2x.onrender.com"
+    import.meta.env.VITE_API_URL ||
+    "https://codesync-su2x.onrender.com"
 
 const platformMap = {
     leetcode: "leetcode",
@@ -26,8 +27,39 @@ const platformMap = {
     gfg: "gfg",
 }
 
+const platformInstructions = {
+    leetcode: [
+        "Open your LeetCode profile.",
+        "Go to your profile's Edit Profile section.",
+        "Find the Summary/About section.",
+        "Paste the verification code there.",
+        "Save your profile.",
+        "Come back here and click Verify Account.",
+    ],
+
+    codeforces: [
+        "Open your Codeforces profile.",
+        "Go to Settings / Edit Profile.",
+        "Find the Organization field.",
+        "Paste the verification code there.",
+        "Save your profile.",
+        "Come back here and click Verify Account.",
+    ],
+
+    gfg: [
+        "Open your GeeksforGeeks profile.",
+        "Go to Edit Profile.",
+        "Find the About Me section.",
+        "Paste the verification code there.",
+        "Save your profile.",
+        "Come back here and click Verify Account.",
+    ],
+}
+
 function ProfileSetup({ onComplete }) {
-    const [showPassword, setShowPassword] = useState(false)
+    const [showPassword, setShowPassword] =
+        useState(false)
+
     const [showConfirmPassword, setShowConfirmPassword] =
         useState(false)
 
@@ -47,18 +79,25 @@ function ProfileSetup({ onComplete }) {
         leetcode: {
             status: "idle",
             code: "",
+            instructions: "",
         },
+
         codeforces: {
             status: "idle",
             code: "",
+            instructions: "",
         },
+
         gfg: {
             status: "idle",
             code: "",
+            instructions: "",
         },
+
         github: {
             status: "idle",
             code: "",
+            instructions: "",
         },
     })
 
@@ -77,6 +116,24 @@ function ProfileSetup({ onComplete }) {
             ...prev,
             [name]: value,
         }))
+
+        // If user removes username before verification,
+        // reset that platform's pending state.
+        if (
+            ["leetcode", "codeforces", "gfg"].includes(
+                name
+            ) &&
+            !value.trim()
+        ) {
+            setVerification((prev) => ({
+                ...prev,
+                [name]: {
+                    status: "idle",
+                    code: "",
+                    instructions: "",
+                },
+            }))
+        }
     }
 
     const getAccessToken = async () => {
@@ -86,12 +143,18 @@ function ProfileSetup({ onComplete }) {
         } = await supabase.auth.getSession()
 
         if (error || !session?.access_token) {
-            alert("Your session has expired. Please login again.")
+            alert(
+                "Your session has expired. Please login again."
+            )
             return null
         }
 
         return session.access_token
     }
+
+    // =====================================================
+    // START VERIFICATION
+    // =====================================================
 
     const handleVerifyClick = async (platform) => {
         const username = formData[platform]?.trim()
@@ -113,6 +176,7 @@ function ProfileSetup({ onComplete }) {
                     ...prev[platform],
                     status: "loading",
                     code: "",
+                    instructions: "",
                 },
             }))
 
@@ -120,10 +184,13 @@ function ProfileSetup({ onComplete }) {
                 `${API_BASE_URL}/api/verification/${platformMap[platform]}/start`,
                 {
                     method: "POST",
+
                     headers: {
-                        "Content-Type": "application/json",
+                        "Content-Type":
+                            "application/json",
                         Authorization: `Bearer ${token}`,
                     },
+
                     body: JSON.stringify({
                         username,
                     }),
@@ -148,9 +215,16 @@ function ProfileSetup({ onComplete }) {
 
             setVerification((prev) => ({
                 ...prev,
+
                 [platform]: {
                     status: "pending",
                     code: data.verificationCode,
+
+                    instructions:
+                        data.instructions ||
+                        getFallbackInstructions(
+                            platform
+                        ),
                 },
             }))
         } catch (error) {
@@ -161,15 +235,24 @@ function ProfileSetup({ onComplete }) {
 
             setVerification((prev) => ({
                 ...prev,
+
                 [platform]: {
                     status: "idle",
                     code: "",
+                    instructions: "",
                 },
             }))
 
-            alert(error.message)
+            alert(
+                error.message ||
+                "Unable to start verification."
+            )
         }
     }
+
+    // =====================================================
+    // VERIFY ACCOUNT
+    // =====================================================
 
     const handleVerifyAccount = async (platform) => {
         const token = await getAccessToken()
@@ -181,6 +264,7 @@ function ProfileSetup({ onComplete }) {
         try {
             setVerification((prev) => ({
                 ...prev,
+
                 [platform]: {
                     ...prev[platform],
                     status: "loading",
@@ -191,10 +275,13 @@ function ProfileSetup({ onComplete }) {
                 `${API_BASE_URL}/api/verification/${platformMap[platform]}/verify`,
                 {
                     method: "POST",
+
                     headers: {
-                        "Content-Type": "application/json",
+                        "Content-Type":
+                            "application/json",
                         Authorization: `Bearer ${token}`,
                     },
+
                     body: JSON.stringify({}),
                 }
             )
@@ -217,11 +304,20 @@ function ProfileSetup({ onComplete }) {
 
             setVerification((prev) => ({
                 ...prev,
+
                 [platform]: {
                     status: "verified",
                     code: "",
+                    instructions: "",
                 },
             }))
+
+            if (data.username) {
+                setFormData((prev) => ({
+                    ...prev,
+                    [platform]: data.username,
+                }))
+            }
         } catch (error) {
             console.error(
                 `${platform} verification error:`,
@@ -230,15 +326,23 @@ function ProfileSetup({ onComplete }) {
 
             setVerification((prev) => ({
                 ...prev,
+
                 [platform]: {
                     ...prev[platform],
                     status: "pending",
                 },
             }))
 
-            alert(error.message)
+            alert(
+                error.message ||
+                "Verification failed."
+            )
         }
     }
+
+    // =====================================================
+    // DISCONNECT
+    // =====================================================
 
     const handleDisconnect = async (platform) => {
         try {
@@ -253,22 +357,18 @@ function ProfileSetup({ onComplete }) {
                 githubPollRef.current = null
             }
 
-            const token =
-                await getAccessToken()
+            const token = await getAccessToken()
 
             if (!token) {
                 return
             }
 
-            const platformMap = {
+            const backendPlatform = {
                 leetcode: "LEETCODE",
                 codeforces: "CODEFORCES",
                 gfg: "GFG",
                 github: "GITHUB",
-            }
-
-            const backendPlatform =
-                platformMap[platform]
+            }[platform]
 
             if (!backendPlatform) {
                 throw new Error(
@@ -276,20 +376,19 @@ function ProfileSetup({ onComplete }) {
                 )
             }
 
-            const response =
-                await fetch(
-                    `${API_BASE_URL}/api/verification/account/${backendPlatform}`,
-                    {
-                        method: "DELETE",
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
-                    }
-                )
+            const response = await fetch(
+                `${API_BASE_URL}/api/verification/account/${backendPlatform}`,
+                {
+                    method: "DELETE",
 
-            const data =
-                await response.json()
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
+                }
+            )
+
+            const data = await response.json()
 
             if (
                 !response.ok ||
@@ -302,12 +401,13 @@ function ProfileSetup({ onComplete }) {
                 )
             }
 
-            // Clear frontend state
             setVerification((prev) => ({
                 ...prev,
+
                 [platform]: {
                     status: "idle",
                     code: "",
+                    instructions: "",
                 },
             }))
 
@@ -328,13 +428,19 @@ function ProfileSetup({ onComplete }) {
         }
     }
 
+    // =====================================================
+    // GITHUB CHECK
+    // =====================================================
+
     const checkGithubVerification = async (userId) => {
         const {
             data,
             error,
         } = await supabase
             .from("platform_accounts")
-            .select("username, verification_status")
+            .select(
+                "username, verification_status"
+            )
             .eq("user_id", userId)
             .eq("platform", "GITHUB")
             .maybeSingle()
@@ -349,7 +455,8 @@ function ProfileSetup({ onComplete }) {
         }
 
         if (
-            data?.verification_status === "VERIFIED"
+            data?.verification_status ===
+            "VERIFIED"
         ) {
             setFormData((prev) => ({
                 ...prev,
@@ -358,9 +465,11 @@ function ProfileSetup({ onComplete }) {
 
             setVerification((prev) => ({
                 ...prev,
+
                 github: {
                     status: "verified",
                     code: "",
+                    instructions: "",
                 },
             }))
 
@@ -369,6 +478,10 @@ function ProfileSetup({ onComplete }) {
 
         return false
     }
+
+    // =====================================================
+    // GITHUB CONNECT
+    // =====================================================
 
     const handleGithubConnect = async () => {
         try {
@@ -382,8 +495,10 @@ function ProfileSetup({ onComplete }) {
                 `${API_BASE_URL}/api/verification/github/start`,
                 {
                     method: "POST",
+
                     headers: {
-                        Authorization: `Bearer ${token}`,
+                        Authorization:
+                            `Bearer ${token}`,
                     },
                 }
             )
@@ -418,26 +533,44 @@ function ProfileSetup({ onComplete }) {
                 return
             }
 
-            const pollInterval = setInterval(async () => {
-                try {
-                    const verified =
-                        await checkGithubVerification(user.id)
+            if (githubPollRef.current) {
+                clearInterval(
+                    githubPollRef.current
+                )
+            }
 
-                    if (verified) {
-                        clearInterval(pollInterval)
-                        setGithubConnected(true)
-                        setGithubVerified(true)
+            githubPollRef.current =
+                setInterval(async () => {
+                    try {
+                        const verified =
+                            await checkGithubVerification(
+                                user.id
+                            )
+
+                        if (verified) {
+                            clearInterval(
+                                githubPollRef.current
+                            )
+
+                            githubPollRef.current =
+                                null
+                        }
+                    } catch (error) {
+                        console.error(
+                            "GitHub verification check error:",
+                            error
+                        )
                     }
-                } catch (error) {
-                    console.error(
-                        "GitHub verification check error:",
-                        error
-                    )
-                }
-            }, 2000)
+                }, 2000)
 
             setTimeout(() => {
-                clearInterval(pollInterval)
+                if (githubPollRef.current) {
+                    clearInterval(
+                        githubPollRef.current
+                    )
+
+                    githubPollRef.current = null
+                }
             }, 120000)
         } catch (error) {
             console.error(
@@ -452,21 +585,34 @@ function ProfileSetup({ onComplete }) {
         }
     }
 
+    // =====================================================
+    // SUBMIT
+    // =====================================================
+
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        if (formData.password !== formData.confirmPassword) {
+        if (
+            formData.password !==
+            formData.confirmPassword
+        ) {
             alert("Passwords do not match.")
             return
         }
 
         if (formData.password.length < 8) {
-            alert("Password must be at least 8 characters.")
+            alert(
+                "Password must be at least 8 characters."
+            )
             return
         }
 
-        if (formData.username.trim().length < 3) {
-            alert("Username must be at least 3 characters.")
+        if (
+            formData.username.trim().length < 3
+        ) {
+            alert(
+                "Username must be at least 3 characters."
+            )
             return
         }
 
@@ -476,7 +622,9 @@ function ProfileSetup({ onComplete }) {
         } = await supabase.auth.getUser()
 
         if (userError || !user) {
-            alert("Your session has expired. Please login again.")
+            alert(
+                "Your session has expired. Please login again."
+            )
             return
         }
 
@@ -494,16 +642,21 @@ function ProfileSetup({ onComplete }) {
             "github",
         ]
 
+        // IMPORTANT:
+        // Empty platform = completely optional.
+        //
+        // Filled platform = must be verified.
         for (const platform of platforms) {
             const username =
                 formData[platform]?.trim()
 
             if (
                 username &&
-                verification[platform].status !== "verified"
+                verification[platform].status !==
+                "verified"
             ) {
                 alert(
-                    `${platformNames[platform]} account is not verified. Please verify it or remove the username.`
+                    `${platformNames[platform]} account is not verified. Please verify it before completing setup.`
                 )
 
                 return
@@ -511,8 +664,11 @@ function ProfileSetup({ onComplete }) {
         }
 
         if (
-            Object.values(verification).some(
-                (item) => item.status === "loading"
+            Object.values(
+                verification
+            ).some(
+                (item) =>
+                    item.status === "loading"
             )
         ) {
             alert(
@@ -522,11 +678,12 @@ function ProfileSetup({ onComplete }) {
             return
         }
 
-        // -----------------------------------------
-        // Get name from Google/Supabase metadata
-        // -----------------------------------------
+        // =================================================
+        // NAME
+        // =================================================
 
-        const metadata = user.user_metadata || {}
+        const metadata =
+            user.user_metadata || {}
 
         const fullName =
             metadata.full_name ||
@@ -535,13 +692,14 @@ function ProfileSetup({ onComplete }) {
             user.email?.split("@")[0] ||
             "Student"
 
-        // -----------------------------------------
-        // Update password
-        // -----------------------------------------
+        // =================================================
+        // PASSWORD
+        // =================================================
 
         const { error: passwordError } =
             await supabase.auth.updateUser({
-                password: formData.password,
+                password:
+                    formData.password,
             })
 
         if (passwordError) {
@@ -549,23 +707,24 @@ function ProfileSetup({ onComplete }) {
             return
         }
 
-        // -----------------------------------------
-        // Create/update student profile
-        // -----------------------------------------
+        // =================================================
+        // STUDENT PROFILE
+        // =================================================
 
-        const { error: studentProfileError } =
-            await supabase
-                .from("student_profiles")
-                .upsert(
-                    {
-                        user_id: user.id,
-                        full_name: fullName,
-                        branch: "CSE",
-                    },
-                    {
-                        onConflict: "user_id",
-                    }
-                )
+        const {
+            error: studentProfileError,
+        } = await supabase
+            .from("student_profiles")
+            .upsert(
+                {
+                    user_id: user.id,
+                    full_name: fullName,
+                    branch: "CSE",
+                },
+                {
+                    onConflict: "user_id",
+                }
+            )
 
         if (studentProfileError) {
             console.error(
@@ -581,19 +740,22 @@ function ProfileSetup({ onComplete }) {
             return
         }
 
-        // -----------------------------------------
-        // Update public.users
-        // -----------------------------------------
+        // =================================================
+        // PUBLIC USERS
+        // =================================================
 
-        const { error: profileError } =
-            await supabase
-                .from("users")
-                .update({
-                    username:
-                        formData.username.trim(),
-                    profile_setup_completed: true,
-                })
-                .eq("id", user.id)
+        const {
+            error: profileError,
+        } = await supabase
+            .from("users")
+            .update({
+                username:
+                    formData.username.trim(),
+
+                profile_setup_completed:
+                    true,
+            })
+            .eq("id", user.id)
 
         if (profileError) {
             console.error(
@@ -605,15 +767,13 @@ function ProfileSetup({ onComplete }) {
             return
         }
 
-        // -----------------------------------------
+        // =================================================
         // FIRST PLATFORM SYNC
-        // -----------------------------------------
+        // =================================================
 
         try {
             const {
-                data: {
-                    session,
-                },
+                data: { session },
             } =
                 await supabase.auth.getSession()
 
@@ -622,9 +782,11 @@ function ProfileSetup({ onComplete }) {
                     `${API_BASE_URL}/api/platform-sync/first-sync`,
                     {
                         method: "POST",
+
                         headers: {
                             "Content-Type":
                                 "application/json",
+
                             Authorization:
                                 `Bearer ${session.access_token}`,
                         },
@@ -635,10 +797,6 @@ function ProfileSetup({ onComplete }) {
                         error
                     )
                 })
-            } else {
-                console.warn(
-                    "No active session found. Initial sync was not triggered."
-                )
             }
         } catch (error) {
             console.error(
@@ -646,10 +804,6 @@ function ProfileSetup({ onComplete }) {
                 error
             )
         }
-
-        // -----------------------------------------
-        // Complete Setup
-        // -----------------------------------------
 
         alert(
             "Account setup completed successfully."
@@ -660,39 +814,37 @@ function ProfileSetup({ onComplete }) {
         }
     }
 
-    const verifiedCount = Object.values(
-        verification
-    ).filter(
-        (platform) =>
-            platform.status === "verified"
-    ).length
+    const verifiedCount =
+        Object.values(verification).filter(
+            (platform) =>
+                platform.status === "verified"
+        ).length
 
     return (
         <div className="min-h-screen overflow-hidden bg-[#070b14] text-foreground">
             <div className="relative min-h-screen">
 
-                {/* Background Grid */}
+                {/* Background */}
                 <div
                     className="pointer-events-none absolute inset-0 opacity-[0.12]"
                     style={{
                         backgroundImage:
                             "linear-gradient(rgba(99,102,241,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.18) 1px, transparent 1px)",
-                        backgroundSize: "48px 48px",
+                        backgroundSize:
+                            "48px 48px",
                     }}
                 />
 
-                {/* Background Glow */}
                 <div className="pointer-events-none absolute left-[-180px] top-[-180px] h-[500px] w-[500px] rounded-full bg-indigo-600/[0.10] blur-[130px]" />
 
                 <div className="pointer-events-none absolute bottom-[-200px] right-[-120px] h-[500px] w-[500px] rounded-full bg-violet-600/[0.10] blur-[130px]" />
 
-                {/* Main */}
                 <div className="relative mx-auto flex min-h-screen max-w-[1050px] items-center justify-center px-5 py-10">
                     <div className="w-full">
 
                         {/* Brand */}
                         <div className="mb-7 text-center">
-                            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-white shadow-[0_0_30px_rgba(99,102,241,0.25)]">
+                            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-white">
                                 <Code2 size={21} />
                             </div>
 
@@ -708,11 +860,8 @@ function ProfileSetup({ onComplete }) {
                             </p>
                         </div>
 
-                        {/* Card */}
+                        {/* Main Card */}
                         <div className="relative overflow-hidden rounded-[24px] border border-indigo-400/25 bg-[#0b101b]/95 p-6 shadow-[0_25px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-8">
-
-                            <div className="pointer-events-none absolute left-1/2 top-[-180px] h-[300px] w-[450px] -translate-x-1/2 rounded-full bg-primary/[0.08] blur-[100px]" />
-
                             <div className="relative">
 
                                 {/* Header */}
@@ -726,10 +875,10 @@ function ProfileSetup({ onComplete }) {
                                         Complete your profile
                                     </h2>
 
-                                    <p className="mt-2 max-w-[560px] text-xs leading-5 text-muted-foreground">
-                                        Create your CodeSync identity and
-                                        verify the coding accounts you want
-                                        to connect.
+                                    <p className="mt-2 max-w-[600px] text-xs leading-5 text-muted-foreground">
+                                        Create your CodeSync identity
+                                        and connect only the coding
+                                        platforms you use.
                                     </p>
                                 </div>
 
@@ -752,8 +901,12 @@ function ProfileSetup({ onComplete }) {
                                                 label="Username"
                                                 icon={User}
                                                 name="username"
-                                                value={formData.username}
-                                                onChange={handleChange}
+                                                value={
+                                                    formData.username
+                                                }
+                                                onChange={
+                                                    handleChange
+                                                }
                                                 placeholder="your_username"
                                                 prefix="@"
                                             />
@@ -761,10 +914,16 @@ function ProfileSetup({ onComplete }) {
                                             <PasswordField
                                                 label="Create Password"
                                                 name="password"
-                                                value={formData.password}
-                                                onChange={handleChange}
+                                                value={
+                                                    formData.password
+                                                }
+                                                onChange={
+                                                    handleChange
+                                                }
                                                 placeholder="Create a password"
-                                                showPassword={showPassword}
+                                                showPassword={
+                                                    showPassword
+                                                }
                                                 setShowPassword={
                                                     setShowPassword
                                                 }
@@ -777,7 +936,9 @@ function ProfileSetup({ onComplete }) {
                                                     value={
                                                         formData.confirmPassword
                                                     }
-                                                    onChange={handleChange}
+                                                    onChange={
+                                                        handleChange
+                                                    }
                                                     placeholder="Confirm your password"
                                                     showPassword={
                                                         showConfirmPassword
@@ -793,16 +954,56 @@ function ProfileSetup({ onComplete }) {
                                     {/* PLATFORMS */}
                                     <section>
                                         <div className="flex items-start justify-between gap-4">
-                                            <SectionTitle
-                                                number="02"
-                                                title="Verify your coding accounts"
-                                                description="Connect accounts you own to sync your coding activity."
-                                            />
+                                            <div>
+                                                <SectionTitle
+                                                    number="02"
+                                                    title="Connect your coding accounts"
+                                                    description="All platforms are optional. Add only the accounts you actually use."
+                                                />
+                                            </div>
 
                                             <div className="shrink-0 rounded-lg border border-border bg-secondary px-3 py-1.5">
                                                 <span className="font-mono text-[9px] text-muted-foreground">
-                                                    {verifiedCount}/4 verified
+                                                    {
+                                                        verifiedCount
+                                                    }
+                                                    /4 verified
                                                 </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Important Guide */}
+                                        <div className="mt-4 rounded-xl border border-primary/15 bg-primary/[0.035] p-4">
+                                            <div className="flex gap-3">
+                                                <ShieldCheck
+                                                    size={17}
+                                                    className="mt-0.5 shrink-0 text-primary"
+                                                />
+
+                                                <div>
+                                                    <p className="text-xs font-semibold text-foreground">
+                                                        How platform verification works
+                                                    </p>
+
+                                                    <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                                                        Enter a username only
+                                                        if you have that
+                                                        platform account.
+                                                        Click Verify to get
+                                                        a unique code. Put
+                                                        that code in the
+                                                        location shown in
+                                                        the card, save your
+                                                        profile, then click
+                                                        Verify Account.
+                                                    </p>
+
+                                                    <p className="mt-2 text-[10px] font-medium text-amber-300">
+                                                        You do not need to
+                                                        connect every
+                                                        platform.
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -810,6 +1011,7 @@ function ProfileSetup({ onComplete }) {
 
                                             <PlatformCard
                                                 name="LeetCode"
+                                                optional
                                                 label="LeetCode username"
                                                 placeholder="leetcode_username"
                                                 icon={Code2}
@@ -817,8 +1019,11 @@ function ProfileSetup({ onComplete }) {
                                                 value={
                                                     formData.leetcode
                                                 }
-                                                onChange={handleChange}
+                                                onChange={
+                                                    handleChange
+                                                }
                                                 inputName="leetcode"
+                                                platform="leetcode"
                                                 verification={
                                                     verification.leetcode
                                                 }
@@ -841,6 +1046,7 @@ function ProfileSetup({ onComplete }) {
 
                                             <PlatformCard
                                                 name="Codeforces"
+                                                optional
                                                 label="Codeforces handle"
                                                 placeholder="codeforces_handle"
                                                 icon={Trophy}
@@ -848,8 +1054,11 @@ function ProfileSetup({ onComplete }) {
                                                 value={
                                                     formData.codeforces
                                                 }
-                                                onChange={handleChange}
+                                                onChange={
+                                                    handleChange
+                                                }
                                                 inputName="codeforces"
+                                                platform="codeforces"
                                                 verification={
                                                     verification.codeforces
                                                 }
@@ -872,6 +1081,7 @@ function ProfileSetup({ onComplete }) {
 
                                             <PlatformCard
                                                 name="GeeksforGeeks"
+                                                optional
                                                 label="GFG username"
                                                 placeholder="gfg_username"
                                                 icon={Code2}
@@ -879,8 +1089,11 @@ function ProfileSetup({ onComplete }) {
                                                 value={
                                                     formData.gfg
                                                 }
-                                                onChange={handleChange}
+                                                onChange={
+                                                    handleChange
+                                                }
                                                 inputName="gfg"
+                                                platform="gfg"
                                                 verification={
                                                     verification.gfg
                                                 }
@@ -903,15 +1116,19 @@ function ProfileSetup({ onComplete }) {
 
                                             <PlatformCard
                                                 name="GitHub"
+                                                optional
                                                 label="Connect through GitHub OAuth"
-                                                placeholder="GitHub username"
+                                                placeholder="GitHub account"
                                                 icon={GitBranch}
                                                 iconClass="text-slate-200"
                                                 value={
                                                     formData.github
                                                 }
-                                                onChange={handleChange}
+                                                onChange={
+                                                    handleChange
+                                                }
                                                 inputName="github"
+                                                platform="github"
                                                 verification={
                                                     verification.github
                                                 }
@@ -925,7 +1142,6 @@ function ProfileSetup({ onComplete }) {
                                                     )
                                                 }
                                             />
-
                                         </div>
 
                                         <p className="mt-3 flex items-center gap-1.5 text-[9px] text-muted-foreground">
@@ -933,17 +1149,17 @@ function ProfileSetup({ onComplete }) {
                                                 size={11}
                                                 className="text-emerald-400"
                                             />
-                                            Verification prevents users from
-                                            claiming someone else's account.
+
+                                            Only accounts you choose
+                                            to connect will be synced.
                                         </p>
                                     </section>
 
                                     {/* COMPLETE */}
                                     <div className="border-t border-border pt-6">
-
                                         <button
                                             type="submit"
-                                            className="group flex h-[52px] w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(99,102,241,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:from-indigo-400 hover:to-violet-400 hover:shadow-[0_14px_40px_rgba(99,102,241,0.30)]"
+                                            className="group flex h-[52px] w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(99,102,241,0.22)] transition-all duration-200 hover:-translate-y-0.5"
                                         >
                                             Complete Setup
 
@@ -954,8 +1170,9 @@ function ProfileSetup({ onComplete }) {
                                         </button>
 
                                         <p className="mt-3 text-center text-[9px] text-muted-foreground">
-                                            You can connect or change platforms
-                                            later from Settings.
+                                            You can connect or change
+                                            platforms later from
+                                            Settings.
                                         </p>
                                     </div>
                                 </form>
@@ -972,9 +1189,9 @@ function ProfileSetup({ onComplete }) {
     )
 }
 
-/* ========================================================= */
-/* SECTION TITLE                                             */
-/* ========================================================= */
+/* =========================================================
+   SECTION TITLE
+========================================================= */
 
 function SectionTitle({
     number,
@@ -1000,9 +1217,9 @@ function SectionTitle({
     )
 }
 
-/* ========================================================= */
-/* INPUT                                                     */
-/* ========================================================= */
+/* =========================================================
+   INPUT
+========================================================= */
 
 function InputField({
     label,
@@ -1019,8 +1236,7 @@ function InputField({
                 {label}
             </label>
 
-            <div className="flex h-[48px] items-center gap-3 rounded-xl border border-border bg-[#101622] px-4 transition-all focus-within:border-violet-500/50">
-
+            <div className="flex h-[48px] items-center gap-3 rounded-xl border border-border bg-[#101622] px-4 focus-within:border-violet-500/50">
                 {prefix ? (
                     <span className="text-xs font-medium text-slate-500">
                         {prefix}
@@ -1046,9 +1262,9 @@ function InputField({
     )
 }
 
-/* ========================================================= */
-/* PASSWORD                                                  */
-/* ========================================================= */
+/* =========================================================
+   PASSWORD
+========================================================= */
 
 function PasswordField({
     label,
@@ -1065,8 +1281,7 @@ function PasswordField({
                 {label}
             </label>
 
-            <div className="flex h-[48px] items-center gap-3 rounded-xl border border-border bg-[#101622] px-4 transition-all focus-within:border-violet-500/50">
-
+            <div className="flex h-[48px] items-center gap-3 rounded-xl border border-border bg-[#101622] px-4 focus-within:border-violet-500/50">
                 <LockKeyhole
                     size={16}
                     className="shrink-0 text-slate-500"
@@ -1093,7 +1308,7 @@ function PasswordField({
                             (prev) => !prev
                         )
                     }
-                    className="text-slate-500 transition-colors hover:text-slate-300"
+                    className="text-slate-500 hover:text-slate-300"
                 >
                     {showPassword ? (
                         <EyeOff size={16} />
@@ -1106,12 +1321,13 @@ function PasswordField({
     )
 }
 
-/* ========================================================= */
-/* PLATFORM CARD                                             */
-/* ========================================================= */
+/* =========================================================
+   PLATFORM CARD
+========================================================= */
 
 function PlatformCard({
     name,
+    optional,
     label,
     placeholder,
     icon: Icon,
@@ -1119,6 +1335,7 @@ function PlatformCard({
     value,
     onChange,
     inputName,
+    platform,
     verification,
     onVerify,
     onVerified,
@@ -1134,17 +1351,25 @@ function PlatformCard({
     const isVerified =
         verification.status === "verified"
 
+    const instructions =
+        verification.instructions ||
+        getFallbackInstructions(platform)
+
     return (
         <div
-            className={`rounded-xl border p-4 transition-all duration-200 ${isVerified
-                ? "border-emerald-400/25 bg-emerald-400/[0.025]"
-                : "border-border bg-[#0d131f] hover:border-primary/20"
-                }`}
+            className={`
+                rounded-xl border p-4
+                transition-all duration-200
+                ${isVerified
+                    ? "border-emerald-400/25 bg-emerald-400/[0.025]"
+                    : "border-border bg-[#0d131f] hover:border-primary/20"
+                }
+            `}
         >
             {/* Header */}
+
             <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-
                     <div
                         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.03] ${iconClass}`}
                     >
@@ -1152,9 +1377,17 @@ function PlatformCard({
                     </div>
 
                     <div className="min-w-0">
-                        <p className="text-xs font-semibold">
-                            {name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-xs font-semibold">
+                                {name}
+                            </p>
+
+                            {optional && (
+                                <span className="rounded-full border border-border bg-secondary px-1.5 py-0.5 text-[7px] font-medium uppercase tracking-wider text-muted-foreground">
+                                    Optional
+                                </span>
+                            )}
+                        </div>
 
                         <p className="truncate text-[9px] text-muted-foreground">
                             {label}
@@ -1170,46 +1403,48 @@ function PlatformCard({
                 )}
             </div>
 
-            {/* Verified */}
+            {/* VERIFIED */}
+
             {isVerified ? (
                 <div className="mt-4 flex items-center justify-between rounded-lg border border-emerald-400/10 bg-emerald-400/[0.04] px-3 py-2.5">
-
                     <div>
                         <p className="text-[9px] text-muted-foreground">
                             Connected account
                         </p>
 
-                        <p className="mt-0.5 text-xs font-semibold text-foreground">
-                            {isGithub
-                                ? `@${value || "GitHub account"}`
-                                : `@${value}`}
+                        <p className="mt-0.5 text-xs font-semibold">
+                            @{value}
                         </p>
                     </div>
 
-                    <span className="text-[8px] text-muted-foreground">
-                        Connected
-                    </span>
+                    <button
+                        type="button"
+                        onClick={onDisconnect}
+                        className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        title="Disconnect"
+                    >
+                        <X size={12} />
+                    </button>
                 </div>
-
             ) : isPending || isLoading ? (
-
-                /* Verification Instructions */
                 <div className="mt-4 rounded-lg border border-violet-400/15 bg-violet-400/[0.035] p-3">
 
-                    <div className="flex items-start justify-between gap-3">
+                    {/* Guide heading */}
 
+                    <div className="flex items-start justify-between gap-3">
                         <div>
                             <p className="text-[10px] font-semibold text-violet-300">
                                 {isLoading
                                     ? "Checking..."
-                                    : "Verify ownership"}
+                                    : "Where to put the code?"}
                             </p>
 
-                            <p className="mt-1 text-[9px] leading-4 text-muted-foreground">
-                                {isGithub
-                                    ? "Complete GitHub authorization to connect your account."
-                                    : "Add this verification code to your public profile, then click verify."}
-                            </p>
+                            {!isLoading && (
+                                <p className="mt-1 text-[9px] leading-4 text-muted-foreground">
+                                    Add the code to the exact profile
+                                    field shown below.
+                                </p>
+                            )}
                         </div>
 
                         {!isGithub && (
@@ -1217,22 +1452,66 @@ function PlatformCard({
                                 type="button"
                                 onClick={onVerify}
                                 disabled={isLoading}
-                                className="text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                                 title="Generate new code"
+                                className="text-muted-foreground hover:text-foreground disabled:opacity-40"
                             >
                                 <RefreshCw size={13} />
                             </button>
                         )}
                     </div>
 
-                    {!isGithub && (
+                    {!isGithub && !isLoading && (
                         <>
-                            {/* Code */}
-                            <div className="mt-3 flex items-center justify-between rounded-lg border border-border bg-[#0b101b] px-3 py-2">
+                            {/* Exact Instructions */}
 
-                                <span className="font-mono text-xs font-bold tracking-wider text-violet-300">
-                                    {verification.code}
-                                </span>
+                            <div className="mt-3 rounded-lg border border-border bg-[#0b101b] p-3">
+                                <div className="space-y-2">
+                                    {instructions
+                                        .split(". ")
+                                        .filter(Boolean)
+                                        .map(
+                                            (
+                                                text,
+                                                index
+                                            ) => (
+                                                <div
+                                                    key={
+                                                        index
+                                                    }
+                                                    className="flex gap-2"
+                                                >
+                                                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-violet-500/10 text-[8px] font-bold text-violet-300">
+                                                        {index +
+                                                            1}
+                                                    </span>
+
+                                                    <p className="text-[9px] leading-4 text-slate-300">
+                                                        {text.endsWith(
+                                                            "."
+                                                        )
+                                                            ? text
+                                                            : `${text}.`}
+                                                    </p>
+                                                </div>
+                                            )
+                                        )}
+                                </div>
+                            </div>
+
+                            {/* Code */}
+
+                            <div className="mt-3 flex items-center justify-between rounded-lg border border-violet-400/20 bg-violet-400/[0.05] px-3 py-2.5">
+                                <div>
+                                    <p className="text-[8px] uppercase tracking-wider text-muted-foreground">
+                                        Verification Code
+                                    </p>
+
+                                    <span className="font-mono text-sm font-bold tracking-wider text-violet-300">
+                                        {
+                                            verification.code
+                                        }
+                                    </span>
+                                </div>
 
                                 <button
                                     type="button"
@@ -1241,27 +1520,41 @@ function PlatformCard({
                                             verification.code
                                         )
                                     }
-                                    disabled={!verification.code}
-                                    className="flex items-center gap-1 text-[8px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+                                    className="flex items-center gap-1 text-[8px] text-muted-foreground hover:text-foreground"
                                 >
                                     <Copy size={10} />
                                     Copy
                                 </button>
                             </div>
 
-                            <div className="mt-3 flex gap-2">
+                            {/* Verify */}
 
+                            <div className="mt-3 flex gap-2">
                                 <button
                                     type="button"
                                     onClick={onVerified}
-                                    disabled={isLoading}
-                                    className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-500/10 text-[9px] font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                                    disabled={
+                                        isLoading
+                                    }
+                                    className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-500/10 text-[9px] font-semibold text-emerald-400 hover:bg-emerald-500/15 disabled:opacity-50"
                                 >
                                     {isLoading ? (
-                                        "Checking..."
+                                        <>
+                                            <RefreshCw
+                                                size={
+                                                    11
+                                                }
+                                                className="animate-spin"
+                                            />
+                                            Checking...
+                                        </>
                                     ) : (
                                         <>
-                                            <Check size={11} />
+                                            <Check
+                                                size={
+                                                    11
+                                                }
+                                            />
                                             Verify Account
                                         </>
                                     )}
@@ -1269,9 +1562,14 @@ function PlatformCard({
 
                                 <button
                                     type="button"
-                                    onClick={onDisconnect}
-                                    disabled={isLoading}
-                                    className="flex h-8 items-center justify-center rounded-lg border border-border px-3 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40"
+                                    onClick={
+                                        onDisconnect
+                                    }
+                                    disabled={
+                                        isLoading
+                                    }
+                                    title="Remove entered account"
+                                    className="flex h-8 items-center justify-center rounded-lg border border-border px-3 text-muted-foreground hover:bg-secondary hover:text-foreground"
                                 >
                                     <X size={12} />
                                 </button>
@@ -1281,36 +1579,33 @@ function PlatformCard({
 
                     {isGithub && (
                         <div className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-[#0b101b] px-3 py-2">
-
                             <RefreshCw
                                 size={12}
                                 className="animate-spin text-violet-300"
                             />
 
                             <span className="text-[9px] text-muted-foreground">
-                                Waiting for GitHub authorization...
+                                Waiting for GitHub
+                                authorization...
                             </span>
                         </div>
                     )}
                 </div>
-
             ) : (
-
-                /* Input */
+                /* INPUT */
                 <div className="mt-3 flex gap-2">
-
-                    {!isGithub && (
+                    {!isGithub ? (
                         <input
                             type="text"
                             name={inputName}
                             value={value}
                             onChange={onChange}
-                            placeholder={placeholder}
+                            placeholder={
+                                placeholder
+                            }
                             className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-[#101622] px-3 text-[10px] text-foreground outline-none placeholder:text-slate-600 focus:border-violet-500/50"
                         />
-                    )}
-
-                    {isGithub && (
+                    ) : (
                         <div className="flex h-9 min-w-0 flex-1 items-center rounded-lg border border-border bg-[#101622] px-3 text-[9px] text-muted-foreground">
                             Secure OAuth connection
                         </div>
@@ -1320,28 +1615,56 @@ function PlatformCard({
                         type="button"
                         onClick={onVerify}
                         disabled={
-                            !isGithub && !value
+                            !isGithub &&
+                            !value?.trim()
                         }
-                        className={`flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[9px] font-semibold transition-all ${isGithub || value
-                            ? "bg-primary/10 text-primary hover:bg-primary/15"
-                            : "cursor-not-allowed bg-secondary text-muted-foreground"
-                            }`}
+                        className={`
+                            flex h-9 shrink-0
+                            items-center gap-1.5
+                            rounded-lg px-3
+                            text-[9px] font-semibold
+                            transition-all
+                            ${isGithub ||
+                                value?.trim()
+                                ? "bg-primary/10 text-primary hover:bg-primary/15"
+                                : "cursor-not-allowed bg-secondary text-muted-foreground"
+                            }
+                        `}
                     >
                         {isGithub ? (
                             <>
                                 Connect
-                                <ExternalLink size={10} />
+                                <ExternalLink
+                                    size={10}
+                                />
                             </>
                         ) : (
                             <>
                                 Verify
-                                <ShieldCheck size={10} />
+                                <ShieldCheck
+                                    size={10}
+                                />
                             </>
                         )}
                     </button>
                 </div>
             )}
         </div>
+    )
+}
+
+/* =========================================================
+   FALLBACK INSTRUCTIONS
+========================================================= */
+
+function getFallbackInstructions(
+    platform
+) {
+    return (
+        platformInstructions[platform]?.join(
+            " "
+        ) ||
+        "Add the verification code to your public profile, save it, then click Verify Account."
     )
 }
 
