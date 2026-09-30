@@ -164,16 +164,16 @@ function DashboardHeader({
                             disabled={syncing}
                             className="
                             flex items-center gap-2
-            rounded-lg
-            border border-primary/50
-            bg-primary/5
-            px-4 py-2.5
-            text-xs font-semibold
-            text-foreground
-            transition-colors
-            hover:bg-primary/10
-            disabled:opacity-50
-        "
+                            rounded-lg
+                            border border-primary/50
+                            bg-primary/5
+                            px-4 py-2.5
+                            text-xs font-semibold
+                            text-foreground
+                            transition-colors
+                            hover:bg-primary/10
+                            disabled:opacity-50
+                             "
                         >
                             <RefreshCw
                                 size={14}
@@ -181,27 +181,6 @@ function DashboardHeader({
                             />
 
                             {syncing ? "Syncing..." : "Sync"}
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setActivePage("Student Profile")
-                            }
-                            className="
-            flex items-center gap-2
-            rounded-lg
-            border border-primary/50
-            bg-primary/5
-            px-4 py-2.5
-            text-xs font-semibold
-            text-foreground
-            transition-colors
-            hover:bg-primary/10
-        "
-                        >
-                            <Pencil size={14} />
-                            Edit Profile
                         </button>
 
                     </div>
