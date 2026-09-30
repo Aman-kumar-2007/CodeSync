@@ -6,7 +6,6 @@ import {
   Search,
   Code2,
   ExternalLink,
-  Github,
 } from "lucide-react";
 
 const PLATFORM_CONFIG = {
@@ -22,7 +21,7 @@ const PLATFORM_CONFIG = {
   },
   github: {
     name: "GitHub",
-    icon: Github,
+    icon: Code2,
     className: "text-emerald-400 bg-emerald-500/10",
   },
   gfg: {
