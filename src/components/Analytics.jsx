@@ -886,7 +886,7 @@ function Analytics() {
                 // Run both requests together
                 const [
                     analyticsResponse,
-                    leaderboardResponse,
+                    profileResponse,
                 ] = await Promise.all([
                     fetch(
                         "https://codesync-su2x.onrender.com/api/analytics",
@@ -896,7 +896,7 @@ function Analytics() {
                     ),
 
                     fetch(
-                        "https://codesync-su2x.onrender.com/api/leaderboard",
+                        "https://codesync-su2x.onrender.com/api/profile/me",
                         {
                             headers,
                         }
@@ -905,43 +905,47 @@ function Analytics() {
 
                 const [
                     analyticsResult,
-                    leaderboardResult,
+                    profileResult,
                 ] = await Promise.all([
                     analyticsResponse.json(),
-                    leaderboardResponse.json(),
+                    profileResponse.json(),
                 ])
 
                 if (
-                    !analyticsResponse.ok ||
-                    !analyticsResult.success
+                    !profileResponse.ok ||
+                    !profileResult.success
                 ) {
                     throw new Error(
-                        analyticsResult.message ||
-                        "Failed to load analytics."
+                        profileResult.message ||
+                        "Failed to load profile."
                     )
                 }
 
-                if (
-                    !leaderboardResponse.ok ||
-                    !leaderboardResult.success
-                ) {
-                    throw new Error(
-                        leaderboardResult.message ||
-                        "Failed to load leaderboard."
-                    )
-                }
-
-                setAnalytics(
+                const analyticsData =
                     analyticsResult.data
-                )
 
-                const leaderboardData = leaderboardResult?.data || {}
+                const profileData =
+                    profileResult.data
 
-                setGlobalRank({
-                    rank: leaderboardData?.currentUserRank ?? null,
-                    total: leaderboardData?.leaderboard?.length ?? 0,
+                setAnalytics({
+                    ...analyticsData,
+
+                    summary: {
+                        ...analyticsData.summary,
+
+                        streak:
+                            profileData?.streak?.current ??
+                            analyticsData?.summary?.streak ??
+                            0,
+                    },
                 })
 
+                setGlobalRank({
+                    rank:
+                        profileData?.ranking?.rank ??
+                        null,
+                    total: null,
+                })
             } catch (error) {
                 console.error(
                     "Analytics fetch error:",
