@@ -1098,8 +1098,8 @@ function Analytics() {
                             : "—"
                     }
                     subtitle={
-                        globalRank?.rank && globalRank?.total
-                            ? `Ranked among ${globalRank.total} students`
+                        globalRank?.rank
+                            ? "CodeSync ranking"
                             : "Not ranked yet"
                     }
                     iconClass="bg-purple-500/10 text-purple-400"
