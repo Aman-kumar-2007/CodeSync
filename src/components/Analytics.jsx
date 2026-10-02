@@ -1022,17 +1022,11 @@ function Analytics() {
 
                         <div className="text-right">
                             <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                                Problem Growth
+                                This Month
                             </p>
 
                             <p className="font-mono text-lg font-bold text-emerald-400">
-                                {analytics?.growth?.problemsSolved?.percentage != null
-                                    ? `${analytics.growth.problemsSolved.percentage >= 0
-                                        ? "+"
-                                        : ""
-                                    }${analytics.growth.problemsSolved.percentage
-                                    }%`
-                                    : "—"}
+                                {analytics?.growth?.problemsSolved?.current ?? 0}
                             </p>
                         </div>
                     </div>
@@ -1042,6 +1036,7 @@ function Analytics() {
             {/* Stats */}
             <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-5">
 
+                {/* Problems Solved */}
                 <StatCard
                     icon={Code2}
                     label="Problems Solved"
@@ -1050,16 +1045,13 @@ function Analytics() {
                     }
                     subtitle={
                         analytics?.growth?.problemsSolved
-                            ? `${analytics.growth.problemsSolved.percentage >= 0
-                                ? "+"
-                                : ""
-                            }${analytics.growth.problemsSolved.percentage
-                            }% from last month`
-                            : "No previous month data"
+                            ? `${analytics.growth.problemsSolved.current ?? 0} solved this month`
+                            : "No monthly data"
                     }
                     iconClass="bg-emerald-500/10 text-emerald-400"
                 />
 
+                {/* Contests */}
                 <StatCard
                     icon={Trophy}
                     label="Contests"
@@ -1068,16 +1060,13 @@ function Analytics() {
                     }
                     subtitle={
                         analytics?.growth?.contests
-                            ? `${analytics.growth.contests.percentage >= 0
-                                ? "+"
-                                : ""
-                            }${analytics.growth.contests.percentage
-                            }% from last month`
-                            : "No previous month data"
+                            ? `${analytics.growth.contests.current ?? 0} contests this month`
+                            : "No monthly data"
                     }
                     iconClass="bg-amber-500/10 text-amber-400"
                 />
 
+                {/* Current Rating */}
                 <StatCard
                     icon={BarChart3}
                     label="Current Rating"
@@ -1089,13 +1078,13 @@ function Analytics() {
                             ? `${analytics.growth.codeforcesRating.change >= 0
                                 ? "+"
                                 : ""
-                            }${analytics.growth.codeforcesRating.change
-                            } from last month`
-                            : "No previous month data"
+                            }${analytics.growth.codeforcesRating.change} this month`
+                            : "No previous rating"
                     }
                     iconClass="bg-blue-500/10 text-blue-400"
                 />
 
+                {/* Global Rank */}
                 <StatCard
                     icon={Award}
                     label="Global Rank"
@@ -1105,13 +1094,14 @@ function Analytics() {
                             : "—"
                     }
                     subtitle={
-                        globalRank?.rank
-                            ? `#${globalRank.rank} out of ${globalRank.total} students`
+                        globalRank?.rank && globalRank?.total
+                            ? `Ranked among ${globalRank.total} students`
                             : "Not ranked yet"
                     }
                     iconClass="bg-purple-500/10 text-purple-400"
                 />
 
+                {/* Streak */}
                 <StatCard
                     icon={Flame}
                     label="Streak"
