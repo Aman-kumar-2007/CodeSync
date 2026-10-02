@@ -60,7 +60,37 @@ function App() {
                     JSON.parse(cachedProfile)
 
                 if (parsedProfile) {
-                    setProfile(parsedProfile)
+                    // Cache may contain either the full dashboard profile or
+                    // only the small identity profile. Never replace the
+                    // current dashboard data with the smaller cached object.
+                    setProfile((previous) => ({
+                        ...(previous || {}),
+                        ...parsedProfile,
+                        platforms:
+                            parsedProfile.platforms ??
+                            previous?.platforms,
+                        activity:
+                            parsedProfile.activity ??
+                            previous?.activity,
+                        topics:
+                            parsedProfile.topics ??
+                            previous?.topics,
+                        solved:
+                            parsedProfile.solved ??
+                            previous?.solved,
+                        currentStreak:
+                            parsedProfile.currentStreak ??
+                            previous?.currentStreak,
+                        maxStreak:
+                            parsedProfile.maxStreak ??
+                            previous?.maxStreak,
+                        rank:
+                            parsedProfile.rank ??
+                            previous?.rank,
+                        score:
+                            parsedProfile.score ??
+                            previous?.score,
+                    }))
                 }
             }
         } catch (error) {
@@ -122,8 +152,7 @@ function App() {
                 return
             }
 
-            const instantProfile = {
-                ...(profile || {}),
+            const identityProfile = {
                 userId: user.id,
                 name:
                     studentProfile.full_name ||
@@ -131,6 +160,7 @@ function App() {
                     "Student",
                 avatar:
                     studentProfile.profile_image ||
+                    metadataAvatar ||
                     null,
                 branch:
                     studentProfile.branch ||
@@ -139,14 +169,26 @@ function App() {
 
             setProfile((previous) => ({
                 ...(previous || {}),
-                ...instantProfile,
+                ...identityProfile,
             }))
 
-            /* Cache only the small profile data */
+            /*
+             * IMPORTANT: update only identity fields in the cache.
+             * Do not replace a full dashboard cache with this small object.
+             */
             try {
+                const existingCached =
+                    JSON.parse(
+                        localStorage.getItem(cacheKey) ||
+                        "null"
+                    ) || {}
+
                 localStorage.setItem(
                     cacheKey,
-                    JSON.stringify(instantProfile)
+                    JSON.stringify({
+                        ...existingCached,
+                        ...identityProfile,
+                    })
                 )
             } catch (error) {
                 console.warn(
@@ -360,16 +402,21 @@ function App() {
             },
         } = supabase.auth.onAuthStateChange(
             (event, session) => {
-                if (session) {
-                    /*
-                     * No need to block rendering.
-                     */
-                    handleAuthenticatedUser(
-                        session
-                    )
-                } else if (
-                    event === "SIGNED_OUT"
+                /*
+                 * Do NOT reload the application profile on every Supabase
+                 * auth event. TOKEN_REFRESHED happens frequently and was
+                 * causing the small cached profile to overwrite dashboard
+                 * data such as platforms, solved count and streak.
+                 */
+                if (
+                    event === "INITIAL_SESSION" ||
+                    event === "SIGNED_IN" ||
+                    event === "USER_UPDATED"
                 ) {
+                    if (session) {
+                        handleAuthenticatedUser(session)
+                    }
+                } else if (event === "SIGNED_OUT") {
                     setCurrentPage("login")
                     setActivePage("Dashboard")
                     setProfile(null)
