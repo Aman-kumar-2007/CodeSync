@@ -145,9 +145,9 @@ function PodiumCard({ student, position }) {
                         ${style.avatar}
                     `}
                 >
-                    {student.avatar ? (
+                   {student.avatar || student.profile_image ? (
                         <img
-                            src={student.avatar}
+                            src={student.avatar || student.profile_image}
                             alt={student.name || "Student"}
                             className="h-full w-full object-cover"
                             onError={(e) => {

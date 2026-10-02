@@ -82,20 +82,11 @@ function App() {
             metadata.name ||
             null
 
-        const metadataAvatar =
-            metadata.avatar_url ||
-            metadata.avatar ||
-            null
-
         if (metadataName) {
             setProfile((previous) => ({
                 ...(previous || {}),
                 userId: user.id,
                 name: metadataName,
-                avatar:
-                    previous?.avatar ||
-                    metadataAvatar ||
-                    null,
                 username:
                     previous?.username ||
                     null,
@@ -140,7 +131,6 @@ function App() {
                     "Student",
                 avatar:
                     studentProfile.profile_image ||
-                    metadataAvatar ||
                     null,
                 branch:
                     studentProfile.branch ||
