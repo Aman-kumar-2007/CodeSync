@@ -60,6 +60,8 @@ function Sidebar({
             .join("")
             .toUpperCase() || "S"
 
+
+    const avatarUrl = profile?.avatar || null;
     /*
      * ---------------------------------------------------------
      * NAVIGATION
@@ -498,24 +500,18 @@ function Sidebar({
                                 }
                                 className="relative shrink-0"
                             >
-                                <div
-                                    className="
-                                        flex
-                                        h-9
-                                        w-9
-                                        items-center
-                                        justify-center
-                                        rounded-full
-                                        bg-gradient-to-br
-                                        from-indigo-500
-                                        to-violet-600
-                                        text-xs
-                                        font-extrabold
-                                        text-white
-                                        shadow-[0_0_18px_rgba(99,102,241,0.18)]
-                                    "
-                                >
-                                    {initials}
+                                <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full">
+                                    {avatarUrl ? (
+                                        <img
+                                            src={avatarUrl}
+                                            alt={displayName}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
+                                            {initials}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Online */}
