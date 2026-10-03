@@ -66,9 +66,15 @@ function App() {
                     setProfile((previous) => ({
                         ...(previous || {}),
                         ...parsedProfile,
+
+                        // Identity always comes from student_profiles
+                        name: previous?.name || null,
+                        avatar: previous?.avatar || null,
+
                         platforms:
                             parsedProfile.platforms ??
                             previous?.platforms,
+                            
                         activity:
                             parsedProfile.activity ??
                             previous?.activity,
@@ -98,29 +104,6 @@ function App() {
                 "Profile cache read failed:",
                 error
             )
-        }
-
-        /* ----------------------------------------------------- */
-        /* 2. AUTH USER METADATA                                 */
-        /* ----------------------------------------------------- */
-
-        const metadata = user.user_metadata || {}
-
-        const metadataName =
-            metadata.full_name ||
-            metadata.fullName ||
-            metadata.name ||
-            null
-
-        if (metadataName) {
-            setProfile((previous) => ({
-                ...(previous || {}),
-                userId: user.id,
-                name: metadataName,
-                username:
-                    previous?.username ||
-                    null,
-            }))
         }
 
         /* ----------------------------------------------------- */
@@ -154,17 +137,9 @@ function App() {
 
             const identityProfile = {
                 userId: user.id,
-                name:
-                    studentProfile.full_name ||
-                    metadataName ||
-                    "Student",
-                avatar:
-                    studentProfile.profile_image ||
-                    metadataAvatar ||
-                    null,
-                branch:
-                    studentProfile.branch ||
-                    null,
+                name: studentProfile.full_name || "Student",
+                avatar: studentProfile.profile_image || null,
+                branch: studentProfile.branch || null,
             }
 
             setProfile((previous) => ({
@@ -337,7 +312,25 @@ function App() {
                 /* UPDATE PROFILE                                   */
                 /* ------------------------------------------------ */
 
-                setProfile(normalizedProfile)
+                setProfile((previous) => ({
+                    ...normalizedProfile,
+
+                    // Keep the identity data loaded directly from student_profiles
+                    name:
+                        previous?.name ||
+                        normalizedProfile.name ||
+                        "Student",
+
+                    avatar:
+                        previous?.avatar ||
+                        normalizedProfile.avatar ||
+                        null,
+
+                    branch:
+                        previous?.branch ||
+                        normalizedProfile.branch ||
+                        null,
+                }))
 
                 /* ------------------------------------------------ */
                 /* UPDATE CACHE                                     */
