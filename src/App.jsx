@@ -30,6 +30,19 @@ function App() {
     const [profile, setProfile] = useState(null)
     const [profileLoading, setProfileLoading] = useState(true)
 
+    // Keep visited pages mounted so their API state is not lost on navigation.
+    const [visitedPages, setVisitedPages] = useState(
+        () => new Set(["Dashboard"])
+    )
+
+    // Shared dashboard data cache
+    const [analytics, setAnalytics] = useState(null)
+    const [analyticsLoading, setAnalyticsLoading] = useState(true)
+    const [analyticsError, setAnalyticsError] = useState("")
+
+    const [activityData, setActivityData] = useState([])
+    const [activityLoading, setActivityLoading] = useState(true)
+
     /* ========================================================= */
     /* CACHE KEY                                                 */
     /* ========================================================= */
@@ -228,11 +241,32 @@ function App() {
         }
 
         const fetchProfile = async () => {
-            /*
-             * Sidebar already has cached/minimal profile.
-             * This loading state is ONLY for dashboard content.
-             */
-            setProfileLoading(true)
+            const cacheKey = getProfileCacheKey(
+                (await supabase.auth.getSession()).data.session?.user?.id
+            )
+
+            // Show cached dashboard data immediately on return/reload.
+            if (cacheKey && !cacheKey.endsWith("undefined")) {
+                try {
+                    const cached = JSON.parse(
+                        localStorage.getItem(cacheKey) || "null"
+                    )
+
+                    if (cached?.platforms) {
+                        setProfile((previous) => ({
+                            ...(previous || {}),
+                            ...cached,
+                        }))
+                        setProfileLoading(false)
+                    } else {
+                        setProfileLoading(true)
+                    }
+                } catch {
+                    setProfileLoading(true)
+                }
+            } else {
+                setProfileLoading(true)
+            }
 
             try {
                 const {
@@ -366,6 +400,132 @@ function App() {
         fetchProfile()
     }, [currentPage])
 
+    useEffect(() => {
+        setVisitedPages((previous) => {
+            if (previous.has(activePage)) return previous
+
+            const next = new Set(previous)
+            next.add(activePage)
+            return next
+        })
+    }, [activePage])
+
+    /* ========================================================= */
+    /* SHARED ANALYTICS + ACTIVITY                              */
+    /* ========================================================= */
+    useEffect(() => {
+        if (currentPage !== "app") return
+
+        const loadAnalytics = async () => {
+            if (analytics) return
+
+            const { data: { session } } =
+                await supabase.auth.getSession()
+
+            if (!session?.access_token) return
+
+            const analyticsCacheKey =
+                `codesync_analytics_${session.user.id}`
+
+            try {
+                const cached = JSON.parse(
+                    localStorage.getItem(analyticsCacheKey) || "null"
+                )
+
+                if (cached) {
+                    setAnalytics(cached)
+                    setAnalyticsLoading(false)
+                }
+            } catch {}
+
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}/api/analytics`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                        },
+                    }
+                )
+
+                const result = await response.json()
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message || "Failed to load analytics."
+                    )
+                }
+
+                setAnalytics(result.data || null)
+                localStorage.setItem(
+                    analyticsCacheKey,
+                    JSON.stringify(result.data || null)
+                )
+            } catch (error) {
+                console.error("Analytics cache fetch error:", error)
+                setAnalyticsError(error.message)
+            } finally {
+                setAnalyticsLoading(false)
+            }
+        }
+
+        const loadActivity = async () => {
+            if (activityData.length > 0) return
+
+            const { data: { session } } =
+                await supabase.auth.getSession()
+
+            if (!session?.access_token) return
+
+            const activityCacheKey =
+                `codesync_activity_${session.user.id}`
+
+            try {
+                const cached = JSON.parse(
+                    localStorage.getItem(activityCacheKey) || "null"
+                )
+
+                if (Array.isArray(cached)) {
+                    setActivityData(cached)
+                    setActivityLoading(false)
+                }
+            } catch {}
+
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}/api/verification/activity`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                        },
+                    }
+                )
+
+                const result = await response.json()
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message || "Failed to load activity."
+                    )
+                }
+
+                const nextActivity = result.data || []
+                setActivityData(nextActivity)
+                localStorage.setItem(
+                    activityCacheKey,
+                    JSON.stringify(nextActivity)
+                )
+            } catch (error) {
+                console.error("Activity cache fetch error:", error)
+            } finally {
+                setActivityLoading(false)
+            }
+        }
+
+        loadAnalytics()
+        loadActivity()
+    }, [currentPage])
+
     /* ========================================================= */
     /* AUTH INITIALIZATION                                      */
     /* ========================================================= */
@@ -412,7 +572,13 @@ function App() {
                 } else if (event === "SIGNED_OUT") {
                     setCurrentPage("login")
                     setActivePage("Dashboard")
+                    setVisitedPages(new Set(["Dashboard"]))
                     setProfile(null)
+                    setAnalytics(null)
+                    setActivityData([])
+                    setAnalyticsError("")
+                    setAnalyticsLoading(true)
+                    setActivityLoading(true)
                     setProfileLoading(false)
                 }
             }
@@ -478,7 +644,12 @@ function App() {
 
             setCurrentPage("login")
             setActivePage("Dashboard")
+            setVisitedPages(new Set(["Dashboard"]))
             setProfile(null)
+            setAnalytics(null)
+            setActivityData([])
+            setAnalyticsLoading(true)
+            setActivityLoading(true)
         } catch (error) {
             console.error(
                 "Logout error:",
@@ -715,9 +886,16 @@ function App() {
                                             profile={profile}
                                         />
 
-                                        <RatingProgress />
+                                        <RatingProgress
+                                            analytics={analytics}
+                                            loading={analyticsLoading}
+                                            error={analyticsError}
+                                        />
 
-                                        <CodingHeatmap />
+                                        <CodingHeatmap
+                                            activityData={activityData}
+                                            loading={activityLoading}
+                                        />
                                     </>
                                 )}
                             </>
@@ -727,67 +905,85 @@ function App() {
                         {/* LEADERBOARD               */}
                         {/* ========================= */}
 
-                        {activePage ===
-                            "Leaderboard" && (
+                        {visitedPages.has("Leaderboard") && (
+                            <div
+                                className={activePage === "Leaderboard" ? "" : "hidden"}
+                                aria-hidden={activePage !== "Leaderboard"}
+                            >
                                 <Leaderboard />
-                            )}
+                            </div>
+                        )}
 
                         {/* ========================= */}
                         {/* STUDENT PROFILE           */}
                         {/* ========================= */}
 
-                        {activePage ===
-                            "Student Profile" && (
+                        {visitedPages.has("Student Profile") && (
+                            <div
+                                className={activePage === "Student Profile" ? "" : "hidden"}
+                                aria-hidden={activePage !== "Student Profile"}
+                            >
                                 <StudentProfile />
-                            )}
+                            </div>
+                        )}
 
                         {/* ========================= */}
                         {/* CONTESTS                  */}
                         {/* ========================= */}
 
-                        {activePage ===
-                            "Contests" && (
+                        {visitedPages.has("Contests") && (
+                            <div
+                                className={activePage === "Contests" ? "" : "hidden"}
+                                aria-hidden={activePage !== "Contests"}
+                            >
                                 <Contests />
-                            )}
+                            </div>
+                        )}
 
                         {/* ========================= */}
                         {/* ANALYTICS                 */}
                         {/* ========================= */}
 
-                        {activePage ===
-                            "Analytics" && (
+                        {visitedPages.has("Analytics") && (
+                            <div
+                                className={activePage === "Analytics" ? "" : "hidden"}
+                                aria-hidden={activePage !== "Analytics"}
+                            >
                                 <Analytics />
-                            )}
+                            </div>
+                        )}
 
                         {/* ========================= */}
                         {/* SETTINGS                  */}
                         {/* ========================= */}
 
-                        {activePage ===
-                            "Settings" && (
+                        {visitedPages.has("Settings") && (
+                            <div
+                                className={activePage === "Settings" ? "" : "hidden"}
+                                aria-hidden={activePage !== "Settings"}
+                            >
                                 <Settings
-                                    profile={
-                                        profile
-                                    }
+                                    profile={profile}
                                     onViewProfile={() =>
-                                        setActivePage(
-                                            "Student Profile"
-                                        )
+                                        setActivePage("Student Profile")
                                     }
-                                    onLogout={
-                                        handleLogout
-                                    }
+                                    onLogout={handleLogout}
                                 />
-                            )}
+                            </div>
+                        )}
 
                         {/* ========================= */}
                         {/* NOTIFICATIONS             */}
                         {/* ========================= */}
 
-                        {activePage ===
-                            "Notifications" && (
+                        {visitedPages.has("Notifications") && (
+                            <div
+                                className={activePage === "Notifications" ? "" : "hidden"}
+                                aria-hidden={activePage !== "Notifications"}
+                            >
                                 <Notifications />
-                            )}
+                            </div>
+                        )}
 
                     </Layout>
                 }

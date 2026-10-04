@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 
 import {
     TrendingUp,
@@ -14,10 +14,6 @@ import {
     CartesianGrid,
     Tooltip,
 } from "recharts"
-
-import { supabase } from "../lib/supabase"
-
-const API_BASE_URL = "https://codesync-su2x.onrender.com"
 
 function RatingTooltip({
     active,
@@ -239,81 +235,11 @@ function RatingCard({
     )
 }
 
-function RatingProgress() {
-    const [analytics, setAnalytics] =
-        useState(null)
-
-    const [loading, setLoading] =
-        useState(true)
-
-    const [error, setError] =
-        useState("")
-
-    useEffect(() => {
-        const fetchAnalytics = async () => {
-            try {
-                setLoading(true)
-                setError("")
-
-                const {
-                    data: {
-                        session,
-                    },
-                } =
-                    await supabase.auth.getSession()
-
-                if (
-                    !session?.access_token
-                ) {
-                    throw new Error(
-                        "Authentication session not found."
-                    )
-                }
-
-                const response =
-                    await fetch(
-                        `${API_BASE_URL}/api/analytics`,
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${session.access_token}`,
-                            },
-                        }
-                    )
-
-                const result =
-                    await response.json()
-
-                if (
-                    !response.ok ||
-                    !result.success
-                ) {
-                    throw new Error(
-                        result.message ||
-                        "Failed to load rating history."
-                    )
-                }
-
-                setAnalytics(
-                    result.data || null
-                )
-            } catch (error) {
-                console.error(
-                    "Rating history error:",
-                    error
-                )
-
-                setError(
-                    error.message
-                )
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchAnalytics()
-    }, [])
-
+function RatingProgress({
+    analytics,
+    loading = false,
+    error = "",
+}) {
     const ratingData =
         analytics?.rating || {}
 
