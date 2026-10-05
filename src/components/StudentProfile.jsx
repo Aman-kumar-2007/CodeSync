@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 
 import { supabase } from "../lib/supabase"
+import { getCachedData, setCachedData } from "../utils/pageCache"
 
 
 const API_BASE_URL = "https://codesync-su2x.onrender.com"
@@ -161,18 +162,13 @@ function StudentProfile() {
 
     const fetchProfile = async () => {
 
+        // Show cached profile immediately, then refresh in background.
+        let cached = null
+
         try {
-
-            setLoading(true)
-            setError("")
-
-
             const {
-                data: {
-                    session,
-                },
+                data: { session },
             } = await supabase.auth.getSession()
-
 
             if (!session?.access_token) {
                 throw new Error(
@@ -180,6 +176,29 @@ function StudentProfile() {
                 )
             }
 
+            const cacheKey = `student_profile_${session.user.id}`
+            cached = getCachedData(
+                cacheKey,
+                10 * 60 * 1000
+            )
+
+            if (cached) {
+                setProfile(cached.profile || null)
+                setSocialAccounts(cached.social || {})
+                setEditForm({
+                    name: cached.profile?.name || "",
+                })
+                setEmail(
+                    cached.email ||
+                    session.user?.email ||
+                    ""
+                )
+                setLoading(false)
+            } else {
+                setLoading(true)
+            }
+
+            setError("")
 
             const response = await fetch(
                 `${API_BASE_URL}/api/profile/me`,
@@ -191,129 +210,66 @@ function StudentProfile() {
                 }
             )
 
+            const result = await response.json()
 
-            const result =
-                await response.json()
-
-
-            if (
-                !response.ok ||
-                !result.success
-            ) {
+            if (!response.ok || !result.success) {
                 throw new Error(
                     result.message ||
                     "Failed to load profile."
                 )
             }
 
-
-            const data =
-                result.data || {}
-
-
-            /*
-             * IMPORTANT
-             *
-             * Backend response:
-             *
-             * data.profile
-             * data.ranking
-             * data.streak
-             * data.platforms
-             * data.social
-             *
-             * We normalize everything into one
-             * frontend profile object.
-             */
-
-            const profileData =
-                data.profile || {}
-
-            const ranking =
-                data.ranking || {}
-
-            const streak =
-                data.streak || {}
-
-            const platforms =
-                data.platforms || {}
+            const data = result.data || {}
+            const profileData = data.profile || {}
+            const ranking = data.ranking || {}
+            const streak = data.streak || {}
+            const platforms = data.platforms || {}
 
             const normalizedProfile = {
-
                 ...profileData,
-
-                rank:
-                    ranking.rank ?? null,
-
-                score:
-                    ranking.score ?? 0,
-
-                solved:
-                    ranking.solved ?? 0,
-
-                currentStreak:
-                    streak.current ?? 0,
-
-                maxStreak:
-                    streak.max ?? 0,
-
+                rank: ranking.rank ?? null,
+                score: ranking.score ?? 0,
+                solved: ranking.solved ?? 0,
+                currentStreak: streak.current ?? 0,
+                maxStreak: streak.max ?? 0,
                 platforms,
-
-                topics:
-                    data.topics || [],
-
-                contests:
-                    data.contests || 0,
-
-                activity:
-                    data.activity || [],
+                topics: data.topics || [],
+                contests: data.contests || 0,
+                activity: data.activity || [],
             }
 
+            const social = data.social || {}
+            const email = session.user?.email || ""
 
-            setProfile(
-                normalizedProfile
-            )
-
-
-            setSocialAccounts(
-                data.social || {}
-            )
-
-
+            setProfile(normalizedProfile)
+            setSocialAccounts(social)
             setEditForm({
-                name:
-                    normalizedProfile.name ||
-                    "",
+                name: normalizedProfile.name || "",
+            })
+            setEmail(email)
+
+            // Persist the fresh profile for instant display after refresh/navigation.
+            setCachedData(cacheKey, {
+                profile: normalizedProfile,
+                social,
+                email,
             })
 
-
-            const {
-                data: {
-                    user,
-                },
-            } = await supabase.auth.getUser()
-
-
-            setEmail(
-                user?.email || ""
-            )
-
         } catch (error) {
-
             console.error(
                 "Student profile fetch error:",
                 error
             )
 
-            setError(
-                error.message ||
-                "Failed to load profile."
-            )
-
+            // Keep cached UI if background refresh fails.
+            if (!cached) {
+                setError(
+                    error.message ||
+                    "Failed to load profile."
+                )
+            }
         } finally {
-
             setLoading(false)
-
         }
     }
 

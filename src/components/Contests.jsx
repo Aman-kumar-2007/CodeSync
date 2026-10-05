@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { supabase } from "../lib/supabase"
+import { getCachedData, setCachedData } from "../utils/pageCache"
 
 import {
     Trophy,
@@ -759,11 +760,11 @@ function Contests() {
     const [error, setError] = useState("")
 
     useEffect(() => {
+        let cancelled = false
+        let cached = null
+
         const fetchContests = async () => {
             try {
-                setLoading(true)
-                setError("")
-
                 const {
                     data: { session },
                 } = await supabase.auth.getSession()
@@ -774,8 +775,31 @@ function Contests() {
                     )
                 }
 
+                const cacheKey = `contests_${session.user.id}`
+                cached = getCachedData(
+                    cacheKey,
+                    10 * 60 * 1000
+                )
+
+                if (cached) {
+                    if (!cancelled) {
+                        setUpcomingContests(
+                            cached.upcoming || []
+                        )
+                        setPastContests(
+                            cached.past || []
+                        )
+                        setLoading(false)
+                    }
+                } else if (!cancelled) {
+                    setLoading(true)
+                }
+
+                setError("")
+
                 const headers = {
-                    Authorization: `Bearer ${session.access_token}`,
+                    Authorization:
+                        `Bearer ${session.access_token}`,
                 }
 
                 const [upcomingResponse, pastResponse] =
@@ -790,51 +814,78 @@ function Contests() {
                         ),
                     ])
 
-                const upcomingResult =
-                    await upcomingResponse.json()
-                const pastResult =
-                    await pastResponse.json()
+                const [upcomingResult, pastResult] =
+                    await Promise.all([
+                        upcomingResponse.json(),
+                        pastResponse.json(),
+                    ])
 
-                if (!upcomingResponse.ok || !upcomingResult.success) {
+                if (
+                    !upcomingResponse.ok ||
+                    !upcomingResult.success
+                ) {
                     throw new Error(
                         upcomingResult.message ||
                         "Failed to load upcoming contests."
                     )
                 }
 
-                if (!pastResponse.ok || !pastResult.success) {
+                if (
+                    !pastResponse.ok ||
+                    !pastResult.success
+                ) {
                     throw new Error(
                         pastResult.message ||
                         "Failed to load past contests."
                     )
                 }
 
-                setUpcomingContests(
-                    (upcomingResult.data || []).map(normalizeContest)
-                )
+                const upcoming =
+                    (upcomingResult.data || []).map(
+                        normalizeContest
+                    )
 
-                setPastContests(
-                    (pastResult.data || []).map(normalizeContest)
-                )
+                const past =
+                    (pastResult.data || []).map(
+                        normalizeContest
+                    )
+
+                if (!cancelled) {
+                    setUpcomingContests(upcoming)
+                    setPastContests(past)
+
+                    setCachedData(cacheKey, {
+                        upcoming,
+                        past,
+                    })
+                }
             } catch (fetchError) {
                 console.error(
                     "Contest fetch error:",
                     fetchError
                 )
 
-                setError(
-                    fetchError.message ||
-                    "Failed to load contests."
-                )
-
-                setUpcomingContests([])
-                setPastContests([])
+                // Do not wipe working cached contests when background refresh fails.
+                if (!cached && !cancelled) {
+                    setError(
+                        fetchError.message ||
+                        "Failed to load contests."
+                    )
+                    setUpcomingContests([])
+                    setPastContests([])
+                }
             } finally {
-                setLoading(false)
+                if (!cancelled) {
+                    setLoading(false)
+                }
             }
         }
 
         fetchContests()
+
+        return () => {
+            cancelled = true
+        }
     }, [])
 
     const filteredContests = useMemo(() => {

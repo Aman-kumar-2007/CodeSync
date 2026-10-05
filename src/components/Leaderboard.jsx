@@ -26,6 +26,11 @@ function getInitials(name) {
     )
 }
 
+import {
+    getCachedData,
+    setCachedData,
+} from "../utils/pageCache"
+
 // =====================================================
 // PODIUM CARD
 // =====================================================
@@ -137,15 +142,14 @@ function PodiumCard({ student, position }) {
                         overflow-hidden rounded-full border-2
                         font-bold transition-all duration-300
                         group-hover:scale-105 group-hover:shadow-lg
-                        ${
-                            isFirst
-                                ? "h-28 w-28 text-3xl"
-                                : "h-24 w-24 text-2xl"
+                        ${isFirst
+                            ? "h-28 w-28 text-3xl"
+                            : "h-24 w-24 text-2xl"
                         }
                         ${style.avatar}
                     `}
                 >
-                   {student.avatar || student.profile_image ? (
+                    {student.avatar || student.profile_image ? (
                         <img
                             src={student.avatar || student.profile_image}
                             alt={student.name || "Student"}
@@ -324,8 +328,20 @@ function Leaderboard() {
         let cancelled = false
 
         const fetchLeaderboard = async () => {
-            try {
+            const cached = getCachedData(
+                "leaderboard",
+                10 * 60 * 1000
+            )
+
+            if (cached) {
+                setStudents(cached.students)
+                setCurrentUserId(cached.currentUserId)
+                setLoading(false)
+            } else {
                 setLoading(true)
+            }
+
+            try {
                 setError("")
 
                 const {
@@ -347,55 +363,44 @@ function Leaderboard() {
                     {
                         method: "GET",
                         headers: {
-                            Authorization: `Bearer ${session.access_token}`,
-                            "Content-Type": "application/json",
+                            Authorization:
+                                `Bearer ${session.access_token}`,
+                            "Content-Type":
+                                "application/json",
                         },
                     }
                 )
 
                 const result = await response.json()
 
-                if (!response.ok || !result.success) {
+                if (
+                    !response.ok ||
+                    !result.success
+                ) {
                     throw new Error(
                         result.message ||
-                            "Failed to fetch leaderboard"
+                        "Failed to fetch leaderboard"
                     )
                 }
 
-                /*
-                 * IMPORTANT:
-                 *
-                 * Backend may return either:
-                 *
-                 * 1. { success: true, data: { leaderboard: [] } }
-                 *
-                 * OR
-                 *
-                 * 2. { success: true, leaderboard: [] }
-                 *
-                 * Handle BOTH formats.
-                 */
                 const leaderboardData =
                     result.data?.leaderboard ??
                     result.leaderboard ??
                     []
 
-                console.log(
-                    "Leaderboard response:",
-                    result
-                )
-
-                console.log(
-                    "Leaderboard students:",
-                    leaderboardData
-                )
-
                 if (!cancelled) {
-                    setStudents(
+                    const studentsData =
                         Array.isArray(leaderboardData)
                             ? leaderboardData
                             : []
-                    )
+
+                    setStudents(studentsData)
+
+                    setCachedData("leaderboard", {
+                        students: studentsData,
+                        currentUserId:
+                            session.user.id,
+                    })
                 }
             } catch (error) {
                 console.error(
@@ -403,11 +408,12 @@ function Leaderboard() {
                     error
                 )
 
-                if (!cancelled) {
+                if (!cached && !cancelled) {
                     setError(
                         error?.message ||
-                            "Failed to load leaderboard"
+                        "Failed to load leaderboard"
                     )
+
                     setStudents([])
                 }
             } finally {
@@ -452,7 +458,7 @@ function Leaderboard() {
 
     const totalPages = Math.ceil(
         filteredStudents.length /
-            STUDENTS_PER_PAGE
+        STUDENTS_PER_PAGE
     )
 
     const startIndex =
@@ -855,10 +861,9 @@ function Leaderboard() {
                                                 transition-all
                                                 duration-200
                                                 last:border-b-0
-                                                ${
-                                                    isCurrentUser
-                                                        ? "bg-primary/[0.06] hover:bg-primary/[0.10]"
-                                                        : "hover:bg-secondary/40"
+                                                ${isCurrentUser
+                                                    ? "bg-primary/[0.06] hover:bg-primary/[0.10]"
+                                                    : "hover:bg-secondary/40"
                                                 }
                                             `}
                                         >
@@ -870,17 +875,16 @@ function Leaderboard() {
                                                         font-mono
                                                         text-xs
                                                         font-semibold
-                                                        ${
-                                                            student.rank ===
+                                                        ${student.rank ===
                                                             1
-                                                                ? "text-amber-400"
-                                                                : student.rank ===
-                                                                  2
+                                                            ? "text-amber-400"
+                                                            : student.rank ===
+                                                                2
                                                                 ? "text-slate-300"
                                                                 : student.rank ===
-                                                                  3
-                                                                ? "text-orange-400"
-                                                                : "text-muted-foreground"
+                                                                    3
+                                                                    ? "text-orange-400"
+                                                                    : "text-muted-foreground"
                                                         }
                                                     `}
                                                 >
@@ -975,17 +979,16 @@ function Leaderboard() {
                                                     font-mono
                                                     text-xs
                                                     font-semibold
-                                                    ${
-                                                        student.rank ===
+                                                    ${student.rank ===
                                                         1
-                                                            ? "text-amber-400"
-                                                            : "text-foreground"
+                                                        ? "text-amber-400"
+                                                        : "text-foreground"
                                                     }
                                                 `}
                                             >
                                                 {Number(
                                                     student.score ||
-                                                        0
+                                                    0
                                                 ).toFixed(1)}
                                             </p>
 
@@ -1062,7 +1065,7 @@ function Leaderboard() {
                                 Showing{" "}
                                 <span className="font-medium text-foreground">
                                     {filteredStudents.length ===
-                                    0
+                                        0
                                         ? 0
                                         : startIndex + 1}
 
@@ -1090,7 +1093,7 @@ function Leaderboard() {
                                                     Math.max(
                                                         1,
                                                         page -
-                                                            1
+                                                        1
                                                     )
                                             )
                                         }
@@ -1123,15 +1126,15 @@ function Leaderboard() {
                                         ) => {
                                             const previousPage =
                                                 pageNumbers[
-                                                    index -
-                                                        1
+                                                index -
+                                                1
                                                 ]
 
                                             const showEllipsis =
                                                 previousPage &&
                                                 page -
-                                                    previousPage >
-                                                    1
+                                                previousPage >
+                                                1
 
                                             return (
                                                 <div
@@ -1166,11 +1169,10 @@ function Leaderboard() {
                                                             border
                                                             text-xs
                                                             font-semibold
-                                                            ${
-                                                                currentPage ===
+                                                            ${currentPage ===
                                                                 page
-                                                                    ? "border-primary bg-primary/10 text-primary"
-                                                                    : "border-border text-muted-foreground hover:border-primary/50 hover:text-primary"
+                                                                ? "border-primary bg-primary/10 text-primary"
+                                                                : "border-border text-muted-foreground hover:border-primary/50 hover:text-primary"
                                                             }
                                                         `}
                                                     >
@@ -1191,7 +1193,7 @@ function Leaderboard() {
                                                     Math.min(
                                                         totalPages,
                                                         page +
-                                                            1
+                                                        1
                                                     )
                                             )
                                         }

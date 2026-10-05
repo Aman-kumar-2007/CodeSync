@@ -27,6 +27,12 @@ import {
 
 import TopicProgress from "./TopicProgress"
 
+
+import {
+    getCachedData,
+    setCachedData,
+} from "../utils/pageCache"
+
 const PERIODS = ["Weekly", "Monthly", "Yearly"]
 
 function AnalyticsLoading() {
@@ -864,9 +870,24 @@ function Analytics() {
     ]
 
     useEffect(() => {
+        let cancelled = false
+
         const fetchAnalytics = async () => {
-            try {
+            const cached = getCachedData(
+                "analytics",
+                10 * 60 * 1000
+            )
+
+            // Show cached data immediately
+            if (cached) {
+                setAnalytics(cached.analytics)
+                setGlobalRank(cached.globalRank)
+                setLoading(false)
+            } else {
                 setLoading(true)
+            }
+
+            try {
                 setError("")
 
                 const {
@@ -883,23 +904,18 @@ function Analytics() {
                     Authorization: `Bearer ${session.access_token}`,
                 }
 
-                // Run both requests together
                 const [
                     analyticsResponse,
                     profileResponse,
                 ] = await Promise.all([
                     fetch(
                         "https://codesync-su2x.onrender.com/api/analytics",
-                        {
-                            headers,
-                        }
+                        { headers }
                     ),
 
                     fetch(
                         "https://codesync-su2x.onrender.com/api/profile/me",
-                        {
-                            headers,
-                        }
+                        { headers }
                     ),
                 ])
 
@@ -927,7 +943,7 @@ function Analytics() {
                 const profileData =
                     profileResult.data
 
-                setAnalytics({
+                const finalAnalytics = {
                     ...analyticsData,
 
                     summary: {
@@ -938,28 +954,47 @@ function Analytics() {
                             analyticsData?.summary?.streak ??
                             0,
                     },
-                })
+                }
 
-                setGlobalRank({
+                const finalGlobalRank = {
                     rank:
                         profileData?.ranking?.rank ??
                         null,
                     total: null,
-                })
+                }
+
+                if (!cancelled) {
+                    setAnalytics(finalAnalytics)
+                    setGlobalRank(finalGlobalRank)
+
+                    // Save fresh data
+                    setCachedData("analytics", {
+                        analytics: finalAnalytics,
+                        globalRank: finalGlobalRank,
+                    })
+                }
             } catch (error) {
                 console.error(
                     "Analytics fetch error:",
                     error
                 )
 
-                setError(error.message)
-
+                // Don't destroy cached UI if background refresh fails
+                if (!cached && !cancelled) {
+                    setError(error.message)
+                }
             } finally {
-                setLoading(false)
+                if (!cancelled) {
+                    setLoading(false)
+                }
             }
         }
 
         fetchAnalytics()
+
+        return () => {
+            cancelled = true
+        }
     }, [])
 
 

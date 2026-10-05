@@ -8,6 +8,10 @@ import { supabase } from "../lib/supabase"
 
 const API_BASE_URL = "https://codesync-su2x.onrender.com"
 
+import {
+    invalidateUserCaches,
+} from "../utils/pageCache"
+
 function DashboardHeader({
     profile,
     setActivePage,
@@ -38,6 +42,8 @@ function DashboardHeader({
                 throw new Error("Sync failed")
             }
 
+            invalidateUserCaches()
+
             alert("Platform data synced successfully.")
             window.location.reload()
         } catch (error) {
@@ -47,6 +53,8 @@ function DashboardHeader({
             setSyncing(false)
         }
     }
+
+
 
     const getGreeting = () => {
         const hour = new Date().getHours()
