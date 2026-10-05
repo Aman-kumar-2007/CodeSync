@@ -86,10 +86,16 @@ function Settings({
 
 
     const [theme, setTheme] = useState(() => {
+        const savedTheme =
+            localStorage.getItem("codesync-theme")
+
+        if (savedTheme) {
+            return savedTheme
+        }
+
         return (
-            localStorage.getItem(
-                "codesync-theme"
-            ) || "light"
+            document.documentElement.dataset.theme ||
+            "light"
         )
     })
 
