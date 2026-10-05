@@ -580,7 +580,7 @@ function Leaderboard() {
 
                         <p className="mt-2 text-xs text-muted-foreground">
                             Compare coding performance
-                            across the PW IOI community.
+                            across the community.
                         </p>
                     </div>
 

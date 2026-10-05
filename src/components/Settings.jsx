@@ -89,7 +89,7 @@ function Settings({
         return (
             localStorage.getItem(
                 "codesync-theme"
-            ) || "dark"
+            ) || "light"
         )
     })
 

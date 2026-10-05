@@ -31,7 +31,7 @@ const platformInstructions = {
     leetcode: [
         "Open your LeetCode profile.",
         "Go to your profile's Edit Profile section.",
-        "Find the Summary/About section.",
+        "Find the read me section.",
         "Paste the verification code there.",
         "Save your profile.",
         "Come back here and click Verify Account.",
@@ -39,7 +39,7 @@ const platformInstructions = {
 
     codeforces: [
         "Open your Codeforces profile.",
-        "Go to Settings / Edit Profile.",
+        "Go to Settings -> Social.",
         "Find the Organization field.",
         "Paste the verification code there.",
         "Save your profile.",
