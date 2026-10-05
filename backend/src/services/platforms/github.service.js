@@ -165,8 +165,7 @@ const getGithubStats = async (
         publicRepositories:
             user.public_repos || 0,
 
-        repositories:
-            repositories.length,
+        repositories: user.public_repos || 0,
 
         pullRequests,
 
