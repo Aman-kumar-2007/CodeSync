@@ -87,9 +87,7 @@ function Settings({
 
     const [theme, setTheme] = useState(() => {
         return (
-            localStorage.getItem(
-                "codesync-theme"
-            ) || "dark"
+           localStorage.getItem("codesync-theme") || "light"
         )
     })
 
