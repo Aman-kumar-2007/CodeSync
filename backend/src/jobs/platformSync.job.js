@@ -1,16 +1,19 @@
 const supabase = require("../config/supabase")
+
 const {
     syncUserPlatforms,
 } = require("../services/platformSync.service")
 
 const SYNC_INTERVAL = 6 * 60 * 60 * 1000 // 6 hours
+const USERS_PER_BATCH = 3
 
 let syncRunning = false
+let schedulerStarted = false
 
 const runPlatformSync = async () => {
     if (syncRunning) {
         console.log(
-            "[Platform Sync] Previous sync is still running. Skipping."
+            "[Platform Sync] A sync is already running. Skipping."
         )
         return
     }
@@ -18,67 +21,97 @@ const runPlatformSync = async () => {
     syncRunning = true
 
     console.log(
-        "[Platform Sync] Background sync started..."
+        "[Platform Sync] Background sync started."
     )
+
+    let successful = 0
+    let partial = 0
+    let failed = 0
 
     try {
         const {
-            data: users,
+            data: accounts,
             error,
         } = await supabase
             .from("platform_accounts")
             .select("user_id")
-            .eq(
-                "verification_status",
-                "VERIFIED"
-            )
+            .eq("verification_status", "VERIFIED")
 
         if (error) {
             throw new Error(
-                `Failed to load users: ${error.message}`
+                `Failed to load platform accounts: ${error.message}`
             )
         }
 
         const userIds = [
             ...new Set(
-                (users || []).map(
-                    (item) => item.user_id
-                )
+                (accounts || [])
+                    .map((account) => account.user_id)
+                    .filter(Boolean)
             ),
         ]
 
         console.log(
-            `[Platform Sync] Users to sync: ${userIds.length}`
+            `[Platform Sync] Users queued: ${userIds.length}`
         )
 
-        const results = await Promise.allSettled(
-            userIds.map((userId) =>
-                syncUserPlatforms(userId)
+        // Process a few users at a time to reduce API rate limits.
+        for (
+            let i = 0;
+            i < userIds.length;
+            i += USERS_PER_BATCH
+        ) {
+            const batch = userIds.slice(
+                i,
+                i + USERS_PER_BATCH
             )
-        )
 
-        let successful = 0
-        let failed = 0
-
-        results.forEach((result) => {
-            if (result.status === "fulfilled") {
-                successful++
-            } else {
-                failed++
-
-                console.error(
-                    "[Platform Sync] User sync failed:",
-                    result.reason
+            const results = await Promise.allSettled(
+                batch.map((userId) =>
+                    syncUserPlatforms(userId)
                 )
-            }
-        })
+            )
+
+            results.forEach((result, index) => {
+                const userId = batch[index]
+
+                if (result.status === "rejected") {
+                    failed++
+
+                    console.error(
+                        `[Platform Sync] User ${userId} failed:`,
+                        result.reason
+                    )
+
+                    return
+                }
+
+                const syncResult = result.value || {}
+                const platformFailures =
+                    syncResult.failed || []
+
+                if (platformFailures.length > 0) {
+                    partial++
+
+                    console.warn(
+                        `[Platform Sync] User ${userId} partially synced:`,
+                        platformFailures
+                    )
+                } else {
+                    successful++
+                }
+            })
+        }
 
         console.log(
-            `[Platform Sync] Completed. Success: ${successful}, Failed: ${failed}`
+            `[Platform Sync] Finished. ` +
+            `Successful: ${successful}, ` +
+            `Partial: ${partial}, ` +
+            `Failed: ${failed}`
         )
     } catch (error) {
         console.error(
-            "[Platform Sync] Fatal error:",
+            "[Platform Sync] Background job failed:",
             error
         )
     } finally {
@@ -87,22 +120,22 @@ const runPlatformSync = async () => {
 }
 
 const startPlatformSyncJob = () => {
-    console.log(
-        "[Platform Sync] Scheduler started."
-    )
+    // Prevent accidental duplicate schedulers.
+    if (schedulerStarted) return
+
+    schedulerStarted = true
 
     console.log(
-        "[Platform Sync] Next sync in 6 hours."
+        "[Platform Sync] Scheduler started. Interval: 6 hours."
     )
 
-    // IMPORTANT:
-    // Do NOT run sync immediately when backend starts.
-    // Existing cached DB data should be used by the frontend.
+    // Run once immediately after backend startup.
+    void runPlatformSync()
 
-    setInterval(
-        runPlatformSync,
-        SYNC_INTERVAL
-    )
+    // Continue syncing every 6 hours.
+    setInterval(() => {
+        void runPlatformSync()
+    }, SYNC_INTERVAL)
 }
 
 module.exports = {
