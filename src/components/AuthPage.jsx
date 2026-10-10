@@ -572,9 +572,26 @@ function AuthPage({ onLogin }) {
                             </div>
 
                             {/* Footer */}
-                            <p className="mt-5 text-center text-[9px] text-muted-foreground">
-                                CodeSync • Track your journey. Build your future.
-                            </p>
+                            <div className="mt-5 text-center">
+                                <p className="text-[9px] text-muted-foreground">
+                                    CodeSync • Track your journey. Build your future.
+                                </p>
+                                <div className="mt-3 flex items-center justify-center gap-4 text-[10px]">
+                                    <a
+                                        href="/privacy-policy"
+                                        className="text-slate-500 transition-colors hover:text-violet-600 hover:underline"
+                                    >
+                                        Privacy Policy
+                                    </a>
+                                    <span className="text-slate-300">·</span>
+                                    <a
+                                        href="/terms"
+                                        className="text-slate-500 transition-colors hover:text-violet-600 hover:underline"
+                                    >
+                                        Terms of Service
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

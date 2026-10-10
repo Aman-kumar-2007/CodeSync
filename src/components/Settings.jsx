@@ -763,6 +763,45 @@ function Settings({
                 </section>
 
 
+                {/* LEGAL */}
+                <section className="mt-5 overflow-hidden rounded-2xl border border-border bg-card">
+                    <SectionHeading
+                        icon={ShieldCheck}
+                        iconClass="text-emerald-500"
+                        bgClass="bg-emerald-500/10"
+                        title="Legal"
+                        description="Review CodeSync policies and terms."
+                    />
+
+                    <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+                        <a
+                            href="/privacy-policy"
+                            className="group flex items-center justify-between gap-4 p-5 transition-colors hover:bg-secondary/50"
+                        >
+                            <div>
+                                <p className="text-sm font-semibold text-foreground">Privacy Policy</p>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    Learn how your information is handled.
+                                </p>
+                            </div>
+                            <ArrowRight size={16} className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                        </a>
+
+                        <a
+                            href="/terms"
+                            className="group flex items-center justify-between gap-4 p-5 transition-colors hover:bg-secondary/50"
+                        >
+                            <div>
+                                <p className="text-sm font-semibold text-foreground">Terms of Service</p>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    Review the rules for using CodeSync.
+                                </p>
+                            </div>
+                            <ArrowRight size={16} className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                        </a>
+                    </div>
+                </section>
+
                 {/* Footer */}
                 <div className="py-8 text-center">
 
