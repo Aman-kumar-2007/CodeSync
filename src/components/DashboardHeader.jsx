@@ -125,11 +125,11 @@ function DashboardHeader({
                         blur-2xl
                     "
                 />
-
-                <div className="relative flex min-h-[150px] items-start justify-between px-4 py-4 md:h-full md:items-center md:px-7 md:py-0">
+                
+                <div className="relative flex min-h-[150px] items-stretch justify-between px-4 py-4 md:h-full md:items-center md:px-7 md:py-0">
                     {/* Left */}
 
-                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-5 py-1 pr-1 md:h-full md:py-5 pb-9 md:pb-0 md:pr-0">
+                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-5 py-1 pr-1 md:h-full md:py-5 md:pr-0">
                         <div>
                             <h1 className="break-words text-xl font-bold leading-tight tracking-tight sm:text-2xl">
                                 {getGreeting()}, {name}.
