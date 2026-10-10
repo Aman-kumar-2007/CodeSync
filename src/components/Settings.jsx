@@ -825,9 +825,8 @@ function Settings({
 
             {logoutOpen && (
                 <LogoutModal
-                    onCancel={() =>
-                        setLogoutOpen(false)
-                    }
+                    profile={profile}
+                    onCancel={() => setLogoutOpen(false)}
                     onConfirm={handleLogout}
                 />
             )}
@@ -1042,6 +1041,7 @@ function AccentButton({
 /* ============================================================= */
 
 function LogoutModal({
+    profile,
     onCancel,
     onConfirm,
 }) {
@@ -1097,23 +1097,30 @@ function LogoutModal({
                     <div className="rounded-xl border border-border bg-secondary/50 p-4">
 
                         <div className="flex items-center gap-3">
-
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
-                                AK
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
+                                {profile?.avatar ? (
+                                    <img
+                                        src={profile.avatar}
+                                        alt={displayName}
+                                        className="h-full w-full object-cover"
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = "none";
+                                        }}
+                                    />
+                                ) : (
+                                    initials
+                                )}
                             </div>
 
-                            <div>
-
-                                <p className="text-sm font-semibold">
-                                    Aman Kumar
+                            <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold">
+                                    {displayName}
                                 </p>
 
-                                <p className="font-mono text-[10px] text-muted-foreground">
-                                    @amankumar_1305
+                                <p className="truncate font-mono text-[10px] text-muted-foreground">
+                                    @{username}
                                 </p>
-
                             </div>
-
                         </div>
 
                     </div>
