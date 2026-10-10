@@ -276,6 +276,18 @@ html[data-theme="dark"] {
     outline-offset: 2px;
 }
 
+/* Remove harsh blue focus border on light-theme auth inputs */
+[data-auth-page] input:focus,
+[data-auth-page] input:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* Keep a subtle, clean focus indicator */
+[data-auth-page] input:focus-visible {
+    border-color: #a5b4fc !important;
+}
 
 
 

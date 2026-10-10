@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Routes, Route } from "react-router"
 
 import AuthPage from "./components/AuthPage"
+import ResetPassword from "./components/ResetPassword"
 import ProfileSetup from "./components/ProfileSetup"
 import Layout from "./components/Layout"
 
@@ -24,7 +25,11 @@ import { supabase } from "./lib/supabase"
 const API_BASE_URL = "https://codesync-su2x.onrender.com"
 
 function App() {
-    const [currentPage, setCurrentPage] = useState("login")
+    const [currentPage, setCurrentPage] = useState(() =>
+        new URLSearchParams(window.location.search).get("reset-password") === "true"
+            ? "reset-password"
+            : "login"
+    )
     const [activePage, setActivePage] = useState("Dashboard")
 
     const [profile, setProfile] = useState(null)
@@ -538,10 +543,19 @@ function App() {
                 },
             } = await supabase.auth.getSession()
 
+            const isPasswordRecovery =
+                new URLSearchParams(window.location.search)
+                    .get("reset-password") === "true"
+
+            if (isPasswordRecovery) {
+                // Keep the recovery session on the password reset screen.
+                setCurrentPage("reset-password")
+                setProfileLoading(false)
+                return
+            }
+
             if (session) {
-                await handleAuthenticatedUser(
-                    session
-                )
+                await handleAuthenticatedUser(session)
             } else {
                 setProfileLoading(false)
             }
@@ -555,6 +569,21 @@ function App() {
             },
         } = supabase.auth.onAuthStateChange(
             (event, session) => {
+                // A recovery link can also trigger INITIAL_SESSION or SIGNED_IN.
+                // Never let those events route the recovery user to Dashboard/Setup.
+                const isPasswordRecovery =
+                    new URLSearchParams(window.location.search)
+                        .get("reset-password") === "true"
+
+                if (
+                    event === "PASSWORD_RECOVERY" ||
+                    isPasswordRecovery
+                ) {
+                    setCurrentPage("reset-password")
+                    setProfileLoading(false)
+                    return
+                }
+
                 /*
                  * Do NOT reload the application profile on every Supabase
                  * auth event. TOKEN_REFRESHED happens frequently and was
@@ -661,6 +690,30 @@ function App() {
     /* ========================================================= */
     /* AUTH PAGES                                                */
     /* ========================================================= */
+
+    if (currentPage === "reset-password") {
+        const returnToLogin = async () => {
+            try {
+                await supabase.auth.signOut()
+            } catch (error) {
+                console.warn("Could not clear recovery session:", error)
+            }
+
+            window.history.replaceState(
+                {},
+                document.title,
+                window.location.pathname
+            )
+            setCurrentPage("login")
+        }
+
+        return (
+            <ResetPassword
+                onBackToLogin={returnToLogin}
+                onPasswordUpdated={returnToLogin}
+            />
+        )
+    }
 
     if (currentPage === "login") {
         return (

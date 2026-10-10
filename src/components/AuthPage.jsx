@@ -17,6 +17,9 @@ import { supabase } from "../lib/supabase"
 function AuthPage({ onLogin }) {
     const [showPassword, setShowPassword] = useState(false)
     const [rememberMe, setRememberMe] = useState(true)
+    const [resetSending, setResetSending] = useState(false)
+    const [resetMessage, setResetMessage] = useState("")
+    const [resetError, setResetError] = useState("")
 
     const [formData, setFormData] = useState({
         email: "",
@@ -97,6 +100,34 @@ function AuthPage({ onLogin }) {
 
         if (onLogin) {
             onLogin()
+        }
+    }
+
+    const handleForgotPassword = async () => {
+        const email = formData.email.trim().toLowerCase()
+        setResetMessage("")
+        setResetError("")
+
+        if (!email || !email.includes("@")) {
+            setResetError("Enter the email address linked to your CodeSync account.")
+            return
+        }
+
+        setResetSending(true)
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/?reset-password=true`,
+            })
+
+            if (error) throw error
+
+            // Avoid revealing whether an account exists for this email.
+            setResetMessage("If an account exists for this email, a password reset link has been sent. Check your inbox and spam folder.")
+        } catch (error) {
+            console.error("Password reset request failed:", error)
+            setResetError(error.message || "Could not send the reset email. Please try again.")
+        } finally {
+            setResetSending(false)
         }
     }
 
@@ -389,9 +420,11 @@ function AuthPage({ onLogin }) {
 
                                                 <button
                                                     type="button"
-                                                    className="text-[10px] font-medium text-violet-400 transition-colors hover:text-violet-300"
+                                                    onClick={handleForgotPassword}
+                                                    disabled={resetSending}
+                                                    className="text-[10px] font-semibold text-violet-600 transition-colors hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
                                                 >
-                                                    Forgot password?
+                                                    {resetSending ? "Sending link..." : "Forgot password?"}
                                                 </button>
                                             </div>
 
@@ -438,6 +471,12 @@ function AuthPage({ onLogin }) {
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {(resetMessage || resetError) && (
+                                            <p role="status" className={`text-xs leading-5 ${resetError ? "text-red-600" : "text-emerald-700"}`}>
+                                                {resetError || resetMessage}
+                                            </p>
+                                        )}
 
                                         {/* Remember Me */}
                                         <button
