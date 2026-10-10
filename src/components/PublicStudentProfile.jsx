@@ -515,7 +515,7 @@ const PublicStudentProfile = () => {
                                     </p>
 
 
-                                    <div className="mt-5 flex flex-wrap gap-2">
+                                    {/* <div className="mt-5 flex flex-wrap gap-2">
 
                                         <InfoPill
                                             icon={
@@ -538,7 +538,7 @@ const PublicStudentProfile = () => {
                                             />
                                         )}
 
-                                    </div>
+                                    </div> */}
 
 
                                     {/* SOCIALS ONLY IF CONNECTED */}

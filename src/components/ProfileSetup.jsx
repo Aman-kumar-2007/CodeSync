@@ -821,7 +821,7 @@ function ProfileSetup({ onComplete }) {
         ).length
 
     return (
-        <div className="min-h-screen overflow-hidden bg-[#070b14] text-foreground">
+        <div data-auth-page className="min-h-screen overflow-hidden bg-[#f5f7fb] text-[#111827]">
             <div className="relative min-h-screen">
 
                 {/* Background */}
@@ -861,7 +861,7 @@ function ProfileSetup({ onComplete }) {
                         </div>
 
                         {/* Main Card */}
-                        <div className="relative overflow-hidden rounded-[24px] border border-indigo-400/25 bg-[#0b101b]/95 p-6 shadow-[0_25px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-8">
+                        <div className="relative overflow-hidden rounded-[24px] border border-[#dce1eb] bg-white/95 p-6 shadow-[0_20px_70px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-8">
                             <div className="relative">
 
                                 {/* Header */}
@@ -962,7 +962,7 @@ function ProfileSetup({ onComplete }) {
                                                 />
                                             </div>
 
-                                            <div className="shrink-0 rounded-lg border border-border bg-secondary px-3 py-1.5">
+                                            <div className="shrink-0 rounded-lg border border-[#dce1eb] bg-secondary px-3 py-1.5">
                                                 <span className="font-mono text-[9px] text-muted-foreground">
                                                     {
                                                         verifiedCount
@@ -981,7 +981,7 @@ function ProfileSetup({ onComplete }) {
                                                 />
 
                                                 <div>
-                                                    <p className="text-xs font-semibold text-foreground">
+                                                    <p className="text-xs font-semibold text-[#111827]">
                                                         How platform verification works
                                                     </p>
 
@@ -1120,7 +1120,7 @@ function ProfileSetup({ onComplete }) {
                                                 label="Connect through GitHub OAuth"
                                                 placeholder="GitHub account"
                                                 icon={GitBranch}
-                                                iconClass="text-slate-200"
+                                                iconClass="text-slate-500"
                                                 value={
                                                     formData.github
                                                 }
@@ -1156,7 +1156,7 @@ function ProfileSetup({ onComplete }) {
                                     </section>
 
                                     {/* COMPLETE */}
-                                    <div className="border-t border-border pt-6">
+                                    <div className="border-t border-[#dce1eb] pt-6">
                                         <button
                                             type="submit"
                                             className="group flex h-[52px] w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(99,102,241,0.22)] transition-all duration-200 hover:-translate-y-0.5"
@@ -1232,11 +1232,11 @@ function InputField({
 }) {
     return (
         <div>
-            <label className="mb-1.5 block text-[9px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+            <label className="mb-1.5 block text-[9px] font-semibold uppercase tracking-[0.08em] text-slate-500">
                 {label}
             </label>
 
-            <div className="flex h-[48px] items-center gap-3 rounded-xl border border-border bg-[#101622] px-4 focus-within:border-violet-500/50">
+            <div className="flex h-[48px] items-center gap-3 rounded-xl border border-[#dce1eb] bg-white px-4 focus-within:border-violet-500/50">
                 {prefix ? (
                     <span className="text-xs font-medium text-slate-500">
                         {prefix}
@@ -1255,7 +1255,7 @@ function InputField({
                     onChange={onChange}
                     placeholder={placeholder}
                     required
-                    className="w-full bg-transparent text-xs text-foreground outline-none placeholder:text-slate-600"
+                    className="w-full bg-transparent text-xs text-[#111827] outline-none placeholder:text-slate-500"
                 />
             </div>
         </div>
@@ -1277,11 +1277,11 @@ function PasswordField({
 }) {
     return (
         <div>
-            <label className="mb-1.5 block text-[9px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+            <label className="mb-1.5 block text-[9px] font-semibold uppercase tracking-[0.08em] text-slate-500">
                 {label}
             </label>
 
-            <div className="flex h-[48px] items-center gap-3 rounded-xl border border-border bg-[#101622] px-4 focus-within:border-violet-500/50">
+            <div className="flex h-[48px] items-center gap-3 rounded-xl border border-[#dce1eb] bg-white px-4 focus-within:border-violet-500/50">
                 <LockKeyhole
                     size={16}
                     className="shrink-0 text-slate-500"
@@ -1298,7 +1298,7 @@ function PasswordField({
                     onChange={onChange}
                     placeholder={placeholder}
                     required
-                    className="w-full bg-transparent text-xs text-foreground outline-none placeholder:text-slate-600"
+                    className="w-full bg-transparent text-xs text-[#111827] outline-none placeholder:text-slate-500"
                 />
 
                 <button
@@ -1308,7 +1308,7 @@ function PasswordField({
                             (prev) => !prev
                         )
                     }
-                    className="text-slate-500 hover:text-slate-300"
+                    className="text-slate-500 hover:text-slate-500"
                 >
                     {showPassword ? (
                         <EyeOff size={16} />
@@ -1362,7 +1362,7 @@ function PlatformCard({
                 transition-all duration-200
                 ${isVerified
                     ? "border-emerald-400/25 bg-emerald-400/[0.025]"
-                    : "border-border bg-[#0d131f] hover:border-primary/20"
+                    : "border-[#dce1eb] bg-white hover:border-primary/20"
                 }
             `}
         >
@@ -1383,7 +1383,7 @@ function PlatformCard({
                             </p>
 
                             {optional && (
-                                <span className="rounded-full border border-border bg-secondary px-1.5 py-0.5 text-[7px] font-medium uppercase tracking-wider text-muted-foreground">
+                                <span className="rounded-full border border-[#dce1eb] bg-secondary px-1.5 py-0.5 text-[7px] font-medium uppercase tracking-wider text-muted-foreground">
                                     Optional
                                 </span>
                             )}
@@ -1420,7 +1420,7 @@ function PlatformCard({
                     <button
                         type="button"
                         onClick={onDisconnect}
-                        className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        className="rounded-lg border border-[#dce1eb] p-2 text-muted-foreground hover:bg-secondary hover:text-[#111827]"
                         title="Disconnect"
                     >
                         <X size={12} />
@@ -1453,7 +1453,7 @@ function PlatformCard({
                                 onClick={onVerify}
                                 disabled={isLoading}
                                 title="Generate new code"
-                                className="text-muted-foreground hover:text-foreground disabled:opacity-40"
+                                className="text-muted-foreground hover:text-[#111827] disabled:opacity-40"
                             >
                                 <RefreshCw size={13} />
                             </button>
@@ -1464,7 +1464,7 @@ function PlatformCard({
                         <>
                             {/* Exact Instructions */}
 
-                            <div className="mt-3 rounded-lg border border-border bg-[#0b101b] p-3">
+                            <div className="mt-3 rounded-lg border border-[#dce1eb] bg-[#f8f9fc] p-3">
                                 <div className="space-y-2">
                                     {instructions
                                         .split(". ")
@@ -1485,7 +1485,7 @@ function PlatformCard({
                                                             1}
                                                     </span>
 
-                                                    <p className="text-[9px] leading-4 text-slate-300">
+                                                    <p className="text-[9px] leading-4 text-slate-500">
                                                         {text.endsWith(
                                                             "."
                                                         )
@@ -1520,7 +1520,7 @@ function PlatformCard({
                                             verification.code
                                         )
                                     }
-                                    className="flex items-center gap-1 text-[8px] text-muted-foreground hover:text-foreground"
+                                    className="flex items-center gap-1 text-[8px] text-muted-foreground hover:text-[#111827]"
                                 >
                                     <Copy size={10} />
                                     Copy
@@ -1569,7 +1569,7 @@ function PlatformCard({
                                         isLoading
                                     }
                                     title="Remove entered account"
-                                    className="flex h-8 items-center justify-center rounded-lg border border-border px-3 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                    className="flex h-8 items-center justify-center rounded-lg border border-[#dce1eb] px-3 text-muted-foreground hover:bg-secondary hover:text-[#111827]"
                                 >
                                     <X size={12} />
                                 </button>
@@ -1578,7 +1578,7 @@ function PlatformCard({
                     )}
 
                     {isGithub && (
-                        <div className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-[#0b101b] px-3 py-2">
+                        <div className="mt-3 flex items-center gap-2 rounded-lg border border-[#dce1eb] bg-[#f8f9fc] px-3 py-2">
                             <RefreshCw
                                 size={12}
                                 className="animate-spin text-violet-300"
@@ -1603,10 +1603,10 @@ function PlatformCard({
                             placeholder={
                                 placeholder
                             }
-                            className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-[#101622] px-3 text-[10px] text-foreground outline-none placeholder:text-slate-600 focus:border-violet-500/50"
+                            className="h-9 min-w-0 flex-1 rounded-lg border border-[#dce1eb] bg-white px-3 text-[10px] text-[#111827] outline-none placeholder:text-slate-500 focus:border-violet-500/50"
                         />
                     ) : (
-                        <div className="flex h-9 min-w-0 flex-1 items-center rounded-lg border border-border bg-[#101622] px-3 text-[9px] text-muted-foreground">
+                        <div className="flex h-9 min-w-0 flex-1 items-center rounded-lg border border-[#dce1eb] bg-white px-3 text-[9px] text-muted-foreground">
                             Secure OAuth connection
                         </div>
                     )}

@@ -114,7 +114,7 @@ function AuthPage({ onLogin }) {
     }
 
     return (
-        <div className="min-h-screen overflow-hidden bg-[#070b14] text-foreground">
+        <div data-auth-page className="min-h-screen overflow-hidden bg-[#f5f7fb] text-[#111827]">
             <div className="relative min-h-screen">
 
                 {/* Background Grid */}
@@ -188,7 +188,7 @@ function AuthPage({ onLogin }) {
                                 </span>
                             </h2>
 
-                            <p className="mt-7 max-w-[620px] text-[15px] leading-7 text-slate-300">
+                            <p className="mt-7 max-w-[620px] text-[15px] leading-7 text-slate-500">
                                 Track your progress across LeetCode,
                                 Codeforces, GeeksforGeeks and GitHub.
                                 Compete with peers, improve your skills,
@@ -220,10 +220,10 @@ function AuthPage({ onLogin }) {
                             <Platform
                                 symbol="GH"
                                 name="GitHub"
-                                className="text-slate-200"
+                                className="text-slate-500"
                             />
 
-                            <div className="h-8 w-px bg-border" />
+                            <div className="h-8 w-px bg-[#dce1eb]" />
 
                             <span className="text-[10px] text-muted-foreground">
                                 and more...
@@ -231,12 +231,12 @@ function AuthPage({ onLogin }) {
                         </div>
 
                         {/* Coding Visual */}
-                        <div className="relative mt-12 min-h-[270px] max-w-[730px] overflow-hidden rounded-3xl border border-border bg-[#090e19]/90">
+                        <div className="relative mt-12 min-h-[270px] max-w-[730px] overflow-hidden rounded-3xl border border-[#dce1eb] bg-white/95">
 
                             <div className="absolute right-[-80px] top-[-100px] h-[320px] w-[320px] rounded-full bg-primary/[0.10] blur-[90px]" />
 
                             {/* Code Editor */}
-                            <div className="absolute bottom-[-10px] right-[-10px] h-[220px] w-[410px] rotate-[-2deg] rounded-xl border border-indigo-400/20 bg-[#0d1320] p-5 shadow-2xl">
+                            <div className="absolute bottom-[-10px] right-[-10px] h-[220px] w-[410px] rotate-[-2deg] rounded-xl border border-[#dce1eb] bg-[#f8f9fc] p-5 shadow-2xl">
 
                                 <div className="mb-4 flex items-center gap-1.5">
                                     <span className="h-2 w-2 rounded-full bg-red-400/60" />
@@ -254,7 +254,7 @@ function AuthPage({ onLogin }) {
                                     <CodeLine
                                         number="02"
                                         text="  let answer = 0;"
-                                        className="text-slate-300"
+                                        className="text-slate-500"
                                     />
 
                                     <CodeLine
@@ -266,7 +266,7 @@ function AuthPage({ onLogin }) {
                                     <CodeLine
                                         number="04"
                                         text="    answer += process(x);"
-                                        className="text-slate-300"
+                                        className="text-slate-500"
                                     />
 
                                     <CodeLine
@@ -295,7 +295,7 @@ function AuthPage({ onLogin }) {
                                     "
                                 </div>
 
-                                <p className="mt-2 text-[23px] font-semibold leading-9 text-slate-200">
+                                <p className="mt-2 text-[23px] font-semibold leading-9 text-slate-500">
                                     Discipline today,
                                     <br />
 
@@ -342,7 +342,7 @@ function AuthPage({ onLogin }) {
                         <div className="w-full max-w-[500px]">
 
                             {/* Login Card */}
-                            <div className="relative overflow-hidden rounded-[24px] border border-indigo-400/25 bg-[#0b101b]/95 p-6 shadow-[0_25px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-8">
+                            <div className="relative overflow-hidden rounded-[24px] border border-[#dce1eb] bg-white/95 p-6 shadow-[0_20px_70px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-8">
 
                                 {/* Glow */}
                                 <div className="pointer-events-none absolute left-1/2 top-[-160px] h-[280px] w-[420px] -translate-x-1/2 rounded-full bg-primary/[0.08] blur-[90px]" />
@@ -383,7 +383,7 @@ function AuthPage({ onLogin }) {
                                         {/* Password */}
                                         <div>
                                             <div className="mb-2 flex items-center justify-between">
-                                                <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                                                <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
                                                     Password
                                                 </label>
 
@@ -395,7 +395,7 @@ function AuthPage({ onLogin }) {
                                                 </button>
                                             </div>
 
-                                            <div className="flex h-[54px] items-center gap-3 rounded-xl border border-border bg-[#101622] px-4 transition-all focus-within:border-violet-500/50 focus-within:bg-[#121927]">
+                                            <div className="flex h-[54px] items-center gap-3 rounded-xl border border-[#dce1eb] bg-white px-4 transition-all focus-within:border-violet-500/50 focus-within:bg-[#f8f9fc]">
 
                                                 <LockKeyhole
                                                     size={17}
@@ -417,7 +417,7 @@ function AuthPage({ onLogin }) {
                                                     }
                                                     placeholder="Enter your password"
                                                     required
-                                                    className="w-full bg-transparent text-xs text-foreground outline-none placeholder:text-slate-600"
+                                                    className="w-full bg-transparent text-xs text-[#111827] outline-none placeholder:text-slate-500"
                                                 />
 
                                                 <button
@@ -428,7 +428,7 @@ function AuthPage({ onLogin }) {
                                                                 !prev
                                                         )
                                                     }
-                                                    className="text-slate-500 transition-colors hover:text-slate-300"
+                                                    className="text-slate-500 transition-colors hover:text-slate-500"
                                                 >
                                                     {showPassword ? (
                                                         <EyeOff size={17} />
@@ -452,7 +452,7 @@ function AuthPage({ onLogin }) {
                                             <span
                                                 className={`flex h-[18px] w-[18px] items-center justify-center rounded-[4px] border transition-all ${rememberMe
                                                     ? "border-violet-400 bg-violet-500 text-white"
-                                                    : "border-border bg-secondary"
+                                                    : "border-[#dce1eb] bg-secondary"
                                                     }`}
                                             >
                                                 {rememberMe && (
@@ -463,7 +463,7 @@ function AuthPage({ onLogin }) {
                                                 )}
                                             </span>
 
-                                            <span className="text-[10px] text-slate-400">
+                                            <span className="text-[10px] text-slate-500">
                                                 Remember me
                                             </span>
                                         </button>
@@ -484,20 +484,20 @@ function AuthPage({ onLogin }) {
 
                                     {/* Divider */}
                                     <div className="my-6 flex items-center gap-3">
-                                        <div className="h-px flex-1 bg-border" />
+                                        <div className="h-px flex-1 bg-[#dce1eb]" />
 
                                         <span className="text-[9px] uppercase tracking-wider text-muted-foreground">
                                             or continue with
                                         </span>
 
-                                        <div className="h-px flex-1 bg-border" />
+                                        <div className="h-px flex-1 bg-[#dce1eb]" />
                                     </div>
 
                                     {/* Google */}
                                     <button
                                         type="button"
                                         onClick={handleGoogleLogin}
-                                        className="flex h-[53px] w-full items-center justify-center gap-3 rounded-xl border border-border bg-[#101622] text-xs font-semibold text-slate-200 transition-all hover:border-slate-600 hover:bg-[#141b29]"
+                                        className="flex h-[53px] w-full items-center justify-center gap-3 rounded-xl border border-[#dce1eb] bg-white text-xs font-semibold text-slate-500 transition-all hover:border-slate-600 hover:bg-[#f1f3f8]"
                                     >
                                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white font-bold text-[#4285F4]">
                                             G
@@ -513,7 +513,7 @@ function AuthPage({ onLogin }) {
                                         </div>
 
                                         <div>
-                                            <p className="text-[10px] font-medium text-slate-300">
+                                            <p className="text-[10px] font-medium text-slate-500">
                                                 Secure & Private
                                             </p>
 
@@ -524,7 +524,7 @@ function AuthPage({ onLogin }) {
                                     </div>
 
                                     {/* No Signup */}
-                                    <div className="mt-7 border-t border-border pt-6 text-center">
+                                    <div className="mt-7 border-t border-[#dce1eb] pt-6 text-center">
                                         <p className="text-[10px] text-muted-foreground">
                                             Don't have access?
                                             <span className="ml-1.5 font-semibold text-violet-400">
@@ -555,7 +555,7 @@ function Platform({ symbol, name, className }) {
     return (
         <div className="flex min-w-[70px] flex-col items-center gap-2">
             <div
-                className={`flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-[#0c121e] font-mono text-[10px] font-bold ${className}`}
+                className={`flex h-12 w-12 items-center justify-center rounded-xl border border-[#dce1eb] bg-[#f1f3f8] font-mono text-[10px] font-bold ${className}`}
             >
                 {symbol}
             </div>
@@ -569,7 +569,7 @@ function Platform({ symbol, name, className }) {
 
 function Feature({ icon: Icon, text }) {
     return (
-        <div className="flex items-center gap-2 text-[10px] text-slate-400">
+        <div className="flex items-center gap-2 text-[10px] text-slate-500">
             <Icon size={14} className="text-primary" />
             <span>{text}</span>
         </div>
@@ -579,7 +579,7 @@ function Feature({ icon: Icon, text }) {
 function CodeLine({ number, text, className }) {
     return (
         <div className="flex gap-4">
-            <span className="w-4 text-right text-slate-700">
+            <span className="w-4 text-right text-slate-500">
                 {number}
             </span>
 
@@ -601,11 +601,11 @@ function InputField({
 }) {
     return (
         <div>
-            <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+            <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
                 {label}
             </label>
 
-            <div className="flex h-[54px] items-center gap-3 rounded-xl border border-border bg-[#101622] px-4 transition-all focus-within:border-violet-500/50 focus-within:bg-[#121927]">
+            <div className="flex h-[54px] items-center gap-3 rounded-xl border border-[#dce1eb] bg-white px-4 transition-all focus-within:border-violet-500/50 focus-within:bg-[#f8f9fc]">
                 <Icon
                     size={17}
                     className="shrink-0 text-slate-500"
@@ -618,7 +618,7 @@ function InputField({
                     onChange={onChange}
                     placeholder={placeholder}
                     required
-                    className="w-full bg-transparent text-xs text-foreground outline-none placeholder:text-slate-600"
+                    className="w-full bg-transparent text-xs text-[#111827] outline-none placeholder:text-slate-500"
                 />
             </div>
         </div>

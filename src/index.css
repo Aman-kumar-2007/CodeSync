@@ -158,3 +158,129 @@ html[data-theme="dark"] {
         transform: translateX(100%);
     }
 }
+
+/* Auth and coding-account setup use a consistent light surface. */
+[data-auth-page] {
+    background-color: #f5f7fb;
+    color: #111827;
+    color-scheme: light;
+}
+
+[data-auth-page] input,
+[data-auth-page] select,
+[data-auth-page] textarea {
+    color: #111827;
+    background-color: transparent;
+}
+
+[data-auth-page] input::placeholder,
+[data-auth-page] textarea::placeholder {
+    color: #94a3b8;
+    opacity: 1;
+}
+
+[data-auth-page] h1,
+[data-auth-page] h2,
+[data-auth-page] h3 {
+    color: #111827;
+}
+
+[data-auth-page] [class*="bg-[#0b101b]"],
+[data-auth-page] [class*="bg-[#090e19]"],
+[data-auth-page] [class*="bg-[#0d1320]"],
+[data-auth-page] [class*="bg-[#101622]"],
+[data-auth-page] [class*="bg-[#0c121e]"] {
+    background-color: #ffffff !important;
+}
+
+
+
+
+
+/* ==========================================
+   CODESYNC AUTH PAGES — LIGHT + HIGH CONTRAST
+========================================== */
+
+[data-auth-page] {
+    background-color: #f8faff !important;
+    color: #111827 !important;
+    color-scheme: light;
+}
+
+/* Improve readability of secondary text */
+[data-auth-page] [class*="text-slate-400"],
+[data-auth-page] [class*="text-slate-500"] {
+    color: #52627a !important;
+}
+
+[data-auth-page] [class*="text-slate-600"] {
+    color: #475569 !important;
+}
+
+[data-auth-page] [class*="text-slate-700"] {
+    color: #334155 !important;
+}
+
+/* Strong headings */
+[data-auth-page] h1,
+[data-auth-page] h2,
+[data-auth-page] h3 {
+    color: #111827 !important;
+}
+
+/* Input fields */
+[data-auth-page] input {
+    color: #172033 !important;
+    caret-color: #6366f1;
+}
+
+[data-auth-page] input::placeholder {
+    color: #718096 !important;
+    opacity: 1;
+}
+
+[data-auth-page] label {
+    color: #475569 !important;
+}
+
+/* Clean white cards with visible borders */
+[data-auth-page] [class*="bg-white"] {
+    border-color: #e1e7f0;
+}
+
+[data-auth-page] [class*="border-[#dce1eb]"] {
+    border-color: #d9e1ed !important;
+}
+
+/* Keep the background glow subtle */
+[data-auth-page] [class*="bg-indigo-600/"],
+[data-auth-page] [class*="bg-violet-600/"] {
+    opacity: 0.45;
+}
+
+/* Code preview: readable muted text */
+[data-auth-page] pre,
+[data-auth-page] code {
+    color: #334155;
+}
+
+/* Keep primary buttons unchanged */
+[data-auth-page] button[class*="bg-gradient-to-r"] {
+    color: #ffffff !important;
+}
+
+/* Accessible focus states */
+[data-auth-page] input:focus-visible,
+[data-auth-page] button:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+}
+
+
+
+
+
+
+
+
+
