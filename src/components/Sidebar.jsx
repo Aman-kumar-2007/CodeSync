@@ -1,5 +1,6 @@
 import { memo, useState } from "react"
 import { supabase } from "../lib/supabase"
+import BrandLogo from "./BrandLogo"
 
 import {
     LayoutDashboard,
@@ -127,25 +128,33 @@ function Sidebar({
             {/* SIDEBAR */}
             {/* ================================================= */}
 
+            {mobileOpen && (
+                <button type="button" aria-label="Close navigation menu" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-[55] bg-black/40 md:hidden" />
+            )}
             <aside
                 className={`
                     fixed
                     left-0
                     top-0
                     z-[60]
-                    flex
                     transition-transform duration-200
-                    ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-                    md:translate-x-0
+                    ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
+                    flex
                     h-screen
                     flex-col
                     border-r
                     border-border
                     bg-background
-                    ${collapsed ? "md:w-[76px]" : "md:w-[240px]"}
-                    w-[min(280px,85vw)]
-                    h-[100dvh]
-                    md:h-screen
+                    ${collapsed
+                        ? "w-[76px]"
+                        : "w-[240px]"
+                    }
+                    max-md:top-0
+                    max-md:h-[100dvh]
+                    max-md:w-[min(280px,85vw)]
+                    max-md:transition-transform
+                    max-md:duration-200
+                    ${mobileOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"}
                 `}
             >
                 {/* ================================================= */}
@@ -154,8 +163,16 @@ function Sidebar({
 
                 <div
                     className={`
-                        flex h-[72px] shrink-0 items-center justify-between gap-2 border-b border-border
-                        ${collapsed ? "px-2 md:justify-center" : "px-4 md:px-5"}
+                        flex
+                        h-[72px]
+                        shrink-0
+                        items-center
+                        border-b
+                        border-border
+                        ${collapsed
+                            ? "justify-center px-2"
+                            : "px-5"
+                        }
                     `}
                 >
                     <button
@@ -175,29 +192,7 @@ function Sidebar({
                     >
                         {/* Logo */}
 
-                        <div
-                            className="
-                                relative
-                                flex
-                                h-9
-                                w-9
-                                shrink-0
-                                items-center
-                                justify-center
-                                rounded-xl
-                                bg-primary
-                                text-primary-foreground
-                                shadow-[0_0_25px_rgba(99,102,241,0.18)]
-                                transition-transform
-                                duration-200
-                                group-hover:scale-105
-                            "
-                        >
-                            <Code2
-                                size={20}
-                                strokeWidth={2.5}
-                            />
-                        </div>
+                        <BrandLogo className="h-10 w-10 shrink-0 transition-transform duration-200 group-hover:scale-105" />
 
                         {/* Brand */}
 
@@ -212,15 +207,6 @@ function Sidebar({
                                 </p>
                             </div>
                         )}
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => setMobileOpen(false)}
-                        aria-label="Close navigation menu"
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-secondary md:hidden"
-                    >
-                        <X size={18} />
                     </button>
                 </div>
 

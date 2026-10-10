@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { ArrowLeft, Code2, Eye, EyeOff, LockKeyhole, CheckCircle2 } from "lucide-react"
 import { supabase } from "../lib/supabase"
+import BrandLogo from "./BrandLogo"
 
 export default function ResetPassword({ onBackToLogin, onPasswordUpdated }) {
     const [password, setPassword] = useState("")
@@ -48,7 +49,7 @@ export default function ResetPassword({ onBackToLogin, onPasswordUpdated }) {
         <main data-auth-page className="flex min-h-screen items-center justify-center bg-[#f5f7fb] px-4 py-10 text-[#111827]">
             <div className="w-full max-w-md rounded-3xl border border-[#e1e7f0] bg-white p-7 shadow-[0_20px_70px_rgba(15,23,42,0.09)] sm:p-9">
                 <div className="mb-6 flex justify-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600"><Code2 size={24} /></div>
+                    <BrandLogo className="h-12 w-12" />
                 </div>
                 {success ? (
                     <div className="text-center">

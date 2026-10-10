@@ -290,10 +290,15 @@ html[data-theme="dark"] {
 }
 
 
+/* Hide horizontal scrollbar while keeping swipe scrolling */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
-
-
-
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 
 
 

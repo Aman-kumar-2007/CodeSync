@@ -343,7 +343,7 @@ function CodingHeatmap({
             <div className="min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-6">
                 {/* Horizontal scroll: latest month is at the left; older months are to the right. */}
                 <div
-                    className="w-full min-w-0 overflow-x-auto overscroll-x-contain pb-2"
+                    className="w-full min-w-0 overflow-x-auto overscroll-x-contain pb-2 hide-scrollbar"
                     aria-label="Coding activity by month; scroll horizontally to view older months"
                 >
                     <div className="grid w-max min-w-[620px] grid-cols-12 gap-3 overflow-visible pb-3 sm:min-w-[760px] sm:gap-4">

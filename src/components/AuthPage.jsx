@@ -13,6 +13,7 @@ import {
     Check,
 } from "lucide-react"
 import { supabase } from "../lib/supabase"
+import BrandLogo from "./BrandLogo"
 
 function AuthPage({ onLogin }) {
     const [showPassword, setShowPassword] = useState(false)
@@ -176,9 +177,7 @@ function AuthPage({ onLogin }) {
                         {/* Header */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-[0_0_30px_rgba(99,102,241,0.25)]">
-                                    <Code2 size={21} />
-                                </div>
+                                <BrandLogo className="h-10 w-10 shrink-0" />
 
                                 <div>
                                     <h1 className="text-lg font-bold">
@@ -382,9 +381,7 @@ function AuthPage({ onLogin }) {
 
                                     {/* Header */}
                                     <div className="mb-4 text-center">
-                                        <div className="mx-auto mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                            <Code2 size={21} />
-                                        </div>
+                                        <BrandLogo className="mx-auto mb-5 h-11 w-11" />
 
                                         <h2 className="text-[29px] font-bold tracking-tight">
                                             Welcome Back

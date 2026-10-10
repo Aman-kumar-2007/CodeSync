@@ -16,6 +16,7 @@ import {
     X,
 } from "lucide-react"
 import { supabase } from "../lib/supabase"
+import BrandLogo from "./BrandLogo"
 
 const API_BASE_URL =
     import.meta.env.VITE_API_URL ||
@@ -844,9 +845,7 @@ function ProfileSetup({ onComplete }) {
 
                         {/* Brand */}
                         <div className="mb-7 text-center">
-                            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-white">
-                                <Code2 size={21} />
-                            </div>
+                            <BrandLogo className="mx-auto h-11 w-11" />
 
                             <h1 className="mt-3 text-xl font-bold">
                                 Code
