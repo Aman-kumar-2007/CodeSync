@@ -22,6 +22,9 @@ import PublicStudentProfile from "./components/PublicStudentProfile"
 
 import { supabase } from "./lib/supabase"
 
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+
 const API_BASE_URL = "https://codesync-su2x.onrender.com"
 
 function App() {
@@ -92,7 +95,7 @@ function App() {
                         platforms:
                             parsedProfile.platforms ??
                             previous?.platforms,
-                            
+
                         activity:
                             parsedProfile.activity ??
                             previous?.activity,
@@ -441,7 +444,7 @@ function App() {
                     setAnalytics(cached)
                     setAnalyticsLoading(false)
                 }
-            } catch {}
+            } catch { }
 
             try {
                 const response = await fetch(
@@ -494,7 +497,7 @@ function App() {
                     setActivityData(cached)
                     setActivityLoading(false)
                 }
-            } catch {}
+            } catch { }
 
             try {
                 const response = await fetch(
@@ -884,6 +887,15 @@ function App() {
 
     return (
         <Routes>
+            <Route
+                path="/privacy-policy"
+                element={<PrivacyPolicy />}
+            />
+
+            <Route
+                path="/terms"
+                element={<TermsOfService />}
+            />
 
             {/* ================================================= */}
             {/* PUBLIC STUDENT PROFILE                            */}
