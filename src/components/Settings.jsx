@@ -1040,72 +1040,83 @@ function AccentButton({
 /* LOGOUT MODAL                                                  */
 /* ============================================================= */
 
-function LogoutModal({
-    profile,
-    onCancel,
-    onConfirm,
-}) {
+
+function LogoutModal({ profile, onCancel, onConfirm }) {
+    const [avatarError, setAvatarError] = useState(false);
+
+    const displayName =
+        profile?.name ||
+        profile?.full_name ||
+        profile?.fullName ||
+        "Student";
+
+    const username =
+        profile?.username ||
+        profile?.userName ||
+        "student";
+
+    const avatarUrl =
+        profile?.avatar ||
+        profile?.profile_image ||
+        profile?.avatar_url ||
+        profile?.profileImage ||
+        null;
+
+    const initials =
+        displayName
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0])
+            .join("")
+            .toUpperCase() || "S";
+
     return (
         <div
             className="fixed inset-0 z-[300] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
             onMouseDown={onCancel}
         >
-
             <div
-                className="w-full max-w-[420px] overflow-hidden rounded-2xl border border-border bg-[#0d131f] shadow-[0_30px_100px_rgba(0,0,0,0.65)]"
-                onMouseDown={(e) =>
-                    e.stopPropagation()
-                }
+                className="w-full max-w-[420px] overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-[0_30px_100px_rgba(0,0,0,0.4)]"
+                onMouseDown={(e) => e.stopPropagation()}
             >
-
                 <div className="flex items-start justify-between border-b border-border p-5">
-
                     <div className="flex items-center gap-3">
-
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-400/10 text-red-400">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-400/10 text-red-500">
                             <AlertTriangle size={18} />
                         </div>
 
                         <div>
-
                             <h3 className="text-base font-bold">
                                 Logout from CodeSync?
                             </h3>
-
                             <p className="mt-1 text-xs text-muted-foreground">
                                 You can sign in again anytime.
                             </p>
-
                         </div>
-
                     </div>
-
 
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        aria-label="Close logout dialog"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
                     >
                         <X size={16} />
                     </button>
-
                 </div>
 
-
                 <div className="p-5">
-
                     <div className="rounded-xl border border-border bg-secondary/50 p-4">
-
                         <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
-                                {profile?.avatar ? (
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white">
+                                {avatarUrl && !avatarError ? (
                                     <img
-                                        src={profile.avatar}
+                                        src={avatarUrl}
                                         alt={displayName}
                                         className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                            e.currentTarget.style.display = "none";
-                                        }}
+                                        onError={() => setAvatarError(true)}
                                     />
                                 ) : (
                                     initials
@@ -1116,44 +1127,35 @@ function LogoutModal({
                                 <p className="truncate text-sm font-semibold">
                                     {displayName}
                                 </p>
-
-                                <p className="truncate font-mono text-[10px] text-muted-foreground">
+                                <p className="truncate font-mono text-xs text-muted-foreground">
                                     @{username}
                                 </p>
                             </div>
                         </div>
-
                     </div>
 
-
                     <div className="mt-5 flex gap-3">
-
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="h-11 flex-1 rounded-xl border border-border bg-secondary text-xs font-semibold text-muted-foreground transition-all hover:text-foreground"
+                            className="h-11 flex-1 rounded-xl border border-border bg-secondary text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
                         >
                             Cancel
                         </button>
 
-
                         <button
                             type="button"
                             onClick={onConfirm}
-                            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-red-500 text-xs font-bold text-white transition-all hover:bg-red-600"
+                            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-red-500 text-sm font-bold text-white transition-colors hover:bg-red-600"
                         >
                             <LogOut size={14} />
                             Logout
                         </button>
-
                     </div>
-
                 </div>
-
             </div>
-
         </div>
-    )
+    );
 }
 
 
