@@ -23,6 +23,8 @@ function Sidebar({
     collapsed,
     setCollapsed,
     profile,
+    mobileOpen = false,
+    onMobileClose,
 }) {
     const [logoutOpen, setLogoutOpen] = useState(false)
 
@@ -116,6 +118,7 @@ function Sidebar({
 
     const navigateTo = (page) => {
         setActivePage(page)
+        onMobileClose?.()
     }
 
     return (
@@ -124,8 +127,17 @@ function Sidebar({
             {/* SIDEBAR */}
             {/* ================================================= */}
 
+            {mobileOpen && (
+                <button
+                    type="button"
+                    aria-label="Close navigation menu"
+                    className="codesync-mobile-overlay"
+                    onClick={onMobileClose}
+                />
+            )}
+
             <aside
-                className={`
+                className={`codesync-sidebar ${mobileOpen ? "mobile-open" : ""}
                     fixed
                     left-0
                     top-0

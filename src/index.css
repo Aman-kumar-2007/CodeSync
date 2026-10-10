@@ -296,3 +296,89 @@ html[data-theme="dark"] {
 
 
 
+
+
+/* =========================================================
+   CODESYNC RESPONSIVE LAYOUT PATCH
+========================================================= */
+html, body, #root { min-height: 100%; width: 100%; }
+body { margin: 0; overflow-x: hidden; }
+img, svg, canvas, video { max-width: 100%; }
+button, input, select, textarea { max-width: 100%; }
+.codesync-mobile-overlay { display: none; }
+.codesync-mobile-menu-button { display: none; }
+
+@media (max-width: 767px) {
+  .codesync-sidebar {
+    width: 280px !important;
+    max-width: calc(100vw - 48px);
+    transform: translateX(-105%);
+    transition: transform 220ms ease;
+    box-shadow: 18px 0 48px rgba(15, 23, 42, 0.14);
+  }
+  .codesync-sidebar.mobile-open { transform: translateX(0); }
+  .codesync-sidebar > button[title="Collapse sidebar"] { display: none !important; }
+  .codesync-mobile-overlay {
+    display: block; position: fixed; inset: 0; z-index: 55;
+    width: 100%; height: 100%; border: 0;
+    background: rgba(15, 23, 42, 0.42); backdrop-filter: blur(2px);
+  }
+  .codesync-main {
+    margin-left: 0 !important; padding-top: 64px !important;
+    min-width: 0; width: 100%;
+  }
+  .codesync-topbar { left: 0 !important; height: 64px !important; }
+  .codesync-topbar > div { padding-left: 12px !important; padding-right: 12px !important; }
+  .codesync-mobile-menu-button { display: inline-flex !important; flex-shrink: 0; }
+  .codesync-main main, .codesync-main section, .codesync-main article {
+    min-width: 0; max-width: 100%;
+  }
+  .codesync-main .p-8 { padding: 16px !important; }
+  .codesync-main .px-8 { padding-left: 16px !important; padding-right: 16px !important; }
+  .codesync-main .px-7, .codesync-main .px-6 {
+    padding-left: 14px !important; padding-right: 14px !important;
+  }
+  .codesync-main .py-8 { padding-top: 18px !important; padding-bottom: 18px !important; }
+  .codesync-main .grid[class*="grid-cols-"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .codesync-main .flex-row { flex-wrap: wrap; }
+  .codesync-main table { min-width: 640px; }
+  .codesync-main [class*="overflow-hidden"]:has(> table),
+  .codesync-main [class*="overflow-hidden"]:has(table) {
+    overflow-x: auto !important; -webkit-overflow-scrolling: touch;
+  }
+  .codesync-main [class*="heatmap"], .codesync-main [data-heatmap] {
+    max-width: 100%; overflow-x: auto;
+  }
+  .codesync-main h1, .codesync-main h2, .codesync-main h3,
+  .codesync-main p, .codesync-main label { overflow-wrap: anywhere; }
+  [role="dialog"], .fixed.inset-0 > .max-w-\[400px\],
+  .fixed.inset-0 > .max-w-\[500px\] { max-width: calc(100vw - 24px); }
+  [data-auth-page] { overflow-x: hidden; }
+  [data-auth-page] input, [data-auth-page] select, [data-auth-page] textarea {
+    width: 100%; min-width: 0;
+  }
+  [data-auth-page] .relative.mx-auto.flex {
+    display: flex; flex-direction: column; min-height: 100svh;
+  }
+  [data-auth-page] .w-full.max-w-\[500px\] { width: 100%; max-width: 500px; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .codesync-main { min-width: 0; }
+  .codesync-main .grid[class*="grid-cols-4"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .codesync-main .grid[class*="grid-cols-5"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  .codesync-main .p-8 { padding: 20px !important; }
+  .codesync-main table { min-width: 680px; }
+}
+
+@media (max-width: 380px) {
+  .codesync-topbar .text-xs { font-size: 11px; }
+  .codesync-main .p-5, .codesync-main .p-6 { padding: 12px !important; }
+  [data-auth-page] input { font-size: 14px; }
+}

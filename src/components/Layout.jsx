@@ -11,6 +11,7 @@ function Layout({
 }) {
     const [sidebarCollapsed, setSidebarCollapsed] =
         useState(false)
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -21,6 +22,8 @@ function Layout({
                 collapsed={sidebarCollapsed}
                 setCollapsed={setSidebarCollapsed}
                 profile={profile}
+                mobileOpen={mobileSidebarOpen}
+                onMobileClose={() => setMobileSidebarOpen(false)}
             />
 
             <main
@@ -28,9 +31,10 @@ function Layout({
                     min-h-screen
                     overflow-x-hidden
                     pt-[72px]
+                    codesync-main
                     ${sidebarCollapsed
-                        ? "ml-[76px]"
-                        : "ml-[240px]"
+                        ? "md:ml-[76px]"
+                        : "md:ml-[240px]"
                     }
                 `}
             >
@@ -40,6 +44,7 @@ function Layout({
                     sidebarCollapsed={
                         sidebarCollapsed
                     }
+                    onMenuClick={() => setMobileSidebarOpen(true)}
                 />
 
                 {children}

@@ -57,6 +57,7 @@ function Topbar({
   activePage,
   setActivePage,
   sidebarCollapsed,
+  onMenuClick,
 }) {
   const [searchOpen, setSearchOpen] =
     useState(false)
@@ -416,9 +417,9 @@ function Topbar({
       {/* TOPBAR                                             */}
       {/* ================================================= */}
 
-      <header className={`fixed right-0 top-0 z-50 h-[72px] border-b border-border bg-background/95 backdrop-blur-xl ${sidebarCollapsed
-        ? "left-[76px]"
-        : "left-[240px]"
+      <header className={`codesync-topbar fixed right-0 top-0 z-50 h-[72px] border-b border-border bg-background/95 backdrop-blur-xl ${sidebarCollapsed
+        ? "md:left-[76px]"
+        : "md:left-[240px]"
         }`} >
 
         <div className="flex h-full items-center justify-between px-5 sm:px-7">
@@ -428,7 +429,9 @@ function Topbar({
 
             <button
               type="button"
-              className="hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+              className="codesync-mobile-menu-button h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+              onClick={onMenuClick}
+              aria-label="Open navigation menu"
             >
               <Menu size={19} />
             </button>
