@@ -87,7 +87,7 @@ function Settings({
 
     const [theme, setTheme] = useState(() => {
         return (
-           localStorage.getItem("codesync-theme") || "light"
+            localStorage.getItem("codesync-theme") || "light"
         )
     })
 
@@ -104,6 +104,8 @@ function Settings({
     const [logoutOpen, setLogoutOpen] =
         useState(false)
 
+
+    const [avatarError, setAvatarError] = useState(false);
 
     /* ========================================================= */
     /* THEME                                                      */
@@ -349,13 +351,13 @@ function Settings({
 
                             {/* Avatar */}
                             <div className="relative shrink-0">
-
                                 <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xl font-extrabold text-white shadow-[0_0_30px_rgba(99,102,241,0.20)] sm:h-20 sm:w-20 sm:text-2xl">
-                                    {profile?.avatar ? (
+                                    {profile?.avatar && !avatarError ? (
                                         <img
                                             src={profile.avatar}
                                             alt={profile?.name || "Profile"}
                                             className="h-full w-full object-cover"
+                                            onError={() => setAvatarError(true)}
                                         />
                                     ) : (
                                         (profile?.name || "Student")
@@ -369,7 +371,6 @@ function Settings({
                                 </div>
 
                                 <span className="absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-card bg-emerald-400" />
-
                             </div>
 
 
