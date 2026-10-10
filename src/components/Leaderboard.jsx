@@ -537,7 +537,7 @@ function Leaderboard() {
     // =================================================
 
     return (
-        <section className="px-8 pb-10 pt-7">
+        <section className="w-full min-w-0 px-4 pb-6 pt-5 sm:px-6 sm:pb-8 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-7">
 
             {/* ================================================= */}
             {/* HEADER */}
@@ -762,8 +762,9 @@ function Leaderboard() {
 
                     <div
                         className="
-                            overflow-hidden rounded-2xl
+                            overflow-x-auto rounded-2xl
                             border border-border bg-card
+                            leaderboard-table-scroll
                         "
                     >
                         {/* Header */}
@@ -772,6 +773,7 @@ function Leaderboard() {
                             className="
                                 grid
                                 grid-cols-[55px_1fr_120px_120px_120px]
+                                min-w-[640px] sm:min-w-0
                                 items-center
                                 border-b border-border
                                 bg-secondary/30
@@ -854,6 +856,7 @@ function Leaderboard() {
                                             className={`
                                                 group grid
                                                 grid-cols-[55px_1fr_120px_120px_120px]
+                                                min-w-[640px] sm:min-w-0
                                                 items-center
                                                 border-b
                                                 border-border
@@ -1041,7 +1044,7 @@ function Leaderboard() {
                         ) : (
                             <div
                                 className="
-                                    flex min-h-[150px]
+                                    flex min-h-[150px] min-w-[640px] sm:min-w-0
                                     items-center
                                     justify-center
                                 "
@@ -1056,9 +1059,8 @@ function Leaderboard() {
 
                         <div
                             className="
-                                flex items-center
-                                justify-between gap-4
-                                px-5 py-4
+                                flex min-w-[640px] items-center
+                                justify-between gap-4 px-5 py-4 sm:min-w-0
                             "
                         >
                             <p className="text-[10px] text-muted-foreground">

@@ -62,14 +62,14 @@ function PlatformCards({ profile }) {
     }
 
     return (
-        <section className="px-8 pt-7">
-            <div className="dashboard-platform-grid grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="px-4 pt-5 sm:px-6 md:px-8 md:pt-7">
+            <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
 
                 {/* ================================================= */}
                 {/* LEETCODE                                         */}
                 {/* ================================================= */}
 
-                <div className="dashboard-platform-card min-h-[230px] rounded-2xl border border-[#f59e0b]/30 bg-card p-5">
+                <div className="min-h-[230px] min-w-0 rounded-2xl border border-[#f59e0b]/30 bg-card p-4 sm:p-5">
 
                     <div className="flex items-center justify-between">
 
@@ -106,7 +106,7 @@ function PlatformCards({ profile }) {
 
                     </div>
 
-                    <div className="mt-7 flex items-center justify-between gap-6">
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-4 sm:mt-7 sm:flex-nowrap sm:gap-6">
 
                         <div>
 
@@ -120,7 +120,7 @@ function PlatformCards({ profile }) {
 
                         </div>
 
-                        <div className="w-[140px] space-y-3">
+                        <div className="w-full max-w-[220px] space-y-3 sm:w-[140px] sm:flex-none">
 
                             <div>
                                 <div className="mb-1.5 flex justify-between text-xs">
@@ -195,7 +195,7 @@ function PlatformCards({ profile }) {
                 {/* CODEFORCES                                       */}
                 {/* ================================================= */}
 
-                <div className="dashboard-platform-card min-h-[230px] rounded-2xl border border-[#2196f3]/30 bg-card p-5">
+                <div className="min-h-[230px] min-w-0 rounded-2xl border border-[#2196f3]/30 bg-card p-4 sm:p-5">
 
                     <div className="flex items-center justify-between">
 
@@ -232,7 +232,7 @@ function PlatformCards({ profile }) {
 
                     </div>
 
-                    <div className="dashboard-cf-metrics mt-6 grid grid-cols-[190px_1fr] gap-12">
+                    <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:gap-6">
 
                         <div>
 
@@ -306,7 +306,7 @@ function PlatformCards({ profile }) {
                 {/* GITHUB                                            */}
                 {/* ================================================= */}
 
-                <div className="dashboard-platform-card min-h-[230px] rounded-2xl border border-emerald-500/30 bg-card p-5">
+                <div className="min-h-[230px] min-w-0 rounded-2xl border border-emerald-500/30 bg-card p-4 sm:p-5">
 
                     <div className="flex items-center justify-between">
 
@@ -343,7 +343,7 @@ function PlatformCards({ profile }) {
 
                     </div>
 
-                    <div className="dashboard-github-metrics mt-7 flex items-end justify-between gap-5">
+                    <div className="mt-7 flex items-end justify-between gap-4 sm:p-5">
 
                         <div>
 
@@ -360,7 +360,7 @@ function PlatformCards({ profile }) {
 
                         <div className="flex flex-1 flex-col items-end">
 
-                            <div className="flex h-[80px] items-end gap-1">
+                            <div className="flex h-[80px] max-w-full items-end gap-1 overflow-hidden">
 
                                 {[
                                     18, 28, 42, 35, 55,
@@ -374,7 +374,7 @@ function PlatformCards({ profile }) {
                                     ) => (
                                         <div
                                             key={index}
-                                            className="w-[7px] rounded-t-sm bg-emerald-500/80"
+                                            className="w-[7px] min-w-[4px] flex-1 rounded-t-sm bg-emerald-500/80"
                                             style={{
                                                 height: `${height}%`,
                                             }}

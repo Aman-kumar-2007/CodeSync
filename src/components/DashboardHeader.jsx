@@ -84,11 +84,11 @@ function DashboardHeader({
         "CSE"
 
     return (
-        <section className="px-8 pb-6 pt-7">
+        <section className="px-4 pb-5 pt-5 sm:px-6 md:px-8 md:pb-6 md:pt-7">
             <div
                 className="
                     relative
-                    h-[150px]
+                    min-h-[150px] h-auto md:h-[150px]
                     overflow-hidden
                     rounded-2xl
                     border
@@ -126,12 +126,12 @@ function DashboardHeader({
                     "
                 />
 
-                <div className="dashboard-hero relative flex h-full items-center justify-between px-7">
+                <div className="relative flex min-h-[150px] items-start justify-between px-4 py-4 md:h-full md:items-center md:px-7 md:py-0">
                     {/* Left */}
 
-                    <div className="dashboard-hero-copy flex h-full min-w-0 flex-col justify-between py-5 pr-20">
+                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-5 py-1 pr-1 md:h-full md:py-5 pb-9 md:pb-0 md:pr-0">
                         <div>
-                            <h1 className="dashboard-greeting text-2xl font-bold tracking-tight">
+                            <h1 className="break-words text-xl font-bold leading-tight tracking-tight sm:text-2xl">
                                 {getGreeting()}, {name}.
                             </h1>
 
@@ -164,7 +164,7 @@ function DashboardHeader({
                         </p>
                     </div>
 
-                    <div className="dashboard-sync absolute right-6 top-5 flex gap-2">
+                    <div className="absolute bottom-3 right-3 flex gap-2 md:bottom-auto md:right-6 md:top-5">
 
                         <button
                             type="button"
@@ -175,7 +175,7 @@ function DashboardHeader({
                             rounded-lg
                             border border-primary/50
                             bg-primary/5
-                            px-4 py-2.5
+                            px-3 py-2 md:px-4 md:py-2.5
                             text-xs font-semibold
                             text-foreground
                             transition-colors

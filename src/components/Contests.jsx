@@ -933,7 +933,7 @@ function Contests() {
 
     if (error) {
         return (
-            <section className="px-8 pb-10 pt-7">
+            <section className="w-full min-w-0 px-4 pb-6 pt-5 sm:px-6 sm:pb-8 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-7">
                 <div className="flex min-h-[400px] items-center justify-center">
                     <div className="max-w-md text-center">
                         <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
@@ -952,7 +952,7 @@ function Contests() {
     }
 
     return (
-        <section className="px-8 pb-10 pt-7">
+        <section className="w-full min-w-0 px-4 pb-6 pt-5 sm:px-6 sm:pb-8 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-7">
             {/* =================================================
                 HEADER
                ================================================= */}

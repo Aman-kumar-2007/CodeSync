@@ -154,6 +154,7 @@ function CodingHeatmap({
 
         const result = []
 
+        // Normal chronological order: oldest month first, latest month last.
         for (
             let monthIndex = 11;
             monthIndex >= 0;
@@ -248,10 +249,14 @@ function CodingHeatmap({
             activeDays,
             label:
                 selectedPlatform === "All Platforms"
-                    ? "Total Solved"
+                    ? "Total Activity"
                     : selectedPlatform === "GitHub"
                         ? "Contributions"
-                        : `${selectedPlatform} Solved`,
+                        : selectedPlatform === "Codeforces"
+                            ? "Submissions"
+                            : selectedPlatform === "GeeksforGeeks"
+                                ? "Activity"
+                                : "Submissions",
         }
     }, [months])
 
@@ -264,11 +269,11 @@ function CodingHeatmap({
     }
 
     return (
-        <section className="px-8 pt-7">
+        <section className="min-w-0 px-4 pt-5 sm:px-6 md:px-8 md:pt-7">
             {/* Header */}
-            <div className="mb-4 flex items-end justify-between">
+            <div className="mb-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <Activity
                             size={19}
                             className="text-primary"
@@ -335,9 +340,13 @@ function CodingHeatmap({
             </div>
 
             {/* Card */}
-            <div className="dashboard-heatmap rounded-2xl border border-border bg-card p-6">
-                {/* Month Grid */}
-                <div className="grid grid-cols-12 gap-4.5 overflow-visible pb-3">
+            <div className="min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-6">
+                {/* Horizontal scroll: latest month is at the left; older months are to the right. */}
+                <div
+                    className="w-full min-w-0 overflow-x-auto overscroll-x-contain pb-2"
+                    aria-label="Coding activity by month; scroll horizontally to view older months"
+                >
+                    <div className="grid w-max min-w-[620px] grid-cols-12 gap-3 overflow-visible pb-3 sm:min-w-[760px] sm:gap-4">
                     {loading ? (
                         <div className="col-span-12 flex h-40 items-center justify-center text-sm text-muted-foreground">
                             Loading activity...
@@ -457,10 +466,11 @@ function CodingHeatmap({
                             )
                         )
                     )}
+                    </div>
                 </div>
 
                 {/* Footer */}
-                <div className="mt-6 flex items-center justify-between border-t border-border pt-5">
+                <div className="mt-6 flex flex-col items-start gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
                     {/* Stats */}
                     <div className="flex items-center">
                         <div className="pr-8">
@@ -487,7 +497,7 @@ function CodingHeatmap({
                     </div>
 
                     {/* Legend */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <span className="mr-1 text-[10px] text-muted-foreground">
                             Less
                         </span>

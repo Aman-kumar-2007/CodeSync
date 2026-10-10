@@ -1004,7 +1004,7 @@ function Analytics() {
 
     if (error) {
         return (
-            <section className="px-8 pb-10 pt-7">
+            <section className="w-full min-w-0 px-4 pb-6 pt-5 sm:px-6 sm:pb-8 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-7">
                 <div className="flex min-h-[400px] items-center justify-center text-sm text-red-400">
                     {error}
                 </div>
@@ -1013,7 +1013,7 @@ function Analytics() {
     }
 
     return (
-        <section className="px-8 pb-10 pt-7">
+        <section className="w-full min-w-0 px-4 pb-6 pt-5 sm:px-6 sm:pb-8 sm:pt-6 lg:px-8 lg:pb-10 lg:pt-7">
             {/* Header */}
             <div className="relative mb-6 overflow-hidden rounded-2xl border border-border bg-card px-6 py-5">
                 <div className="absolute left-0 top-0 h-full w-[2px] bg-primary" />

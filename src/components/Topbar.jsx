@@ -417,21 +417,18 @@ function Topbar({
       {/* TOPBAR                                             */}
       {/* ================================================= */}
 
-      <header className={`codesync-topbar fixed right-0 top-0 z-50 h-[72px] border-b border-border bg-background/95 backdrop-blur-xl ${sidebarCollapsed
-        ? "md:left-[76px]"
-        : "md:left-[240px]"
-        }`} >
+      <header className={`fixed left-0 right-0 top-0 z-50 h-[72px] border-b border-border bg-background/95 backdrop-blur-xl ${sidebarCollapsed ? "md:left-[76px]" : "md:left-[240px]"}`}>
 
-        <div className="flex h-full items-center justify-between px-5 sm:px-7">
+        <div className="flex h-full items-center justify-between gap-2 px-3 sm:px-7">
 
           {/* LEFT */}
           <div className="flex min-w-0 items-center gap-3">
 
             <button
               type="button"
-              className="codesync-mobile-menu-button h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
               onClick={onMenuClick}
               aria-label="Open navigation menu"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm hover:bg-secondary hover:text-foreground md:hidden"
             >
               <Menu size={19} />
             </button>
@@ -466,7 +463,7 @@ function Topbar({
 
 
           {/* RIGHT */}
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
 
             {/* SEARCH */}
             <button
@@ -477,7 +474,7 @@ function Topbar({
                   false
                 )
               }}
-              className="group flex h-10 items-center gap-2 rounded-xl border border-border bg-secondary/70 px-3 text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/[0.04] hover:text-foreground sm:min-w-[190px]"
+              className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-secondary/70 px-0 sm:w-auto sm:justify-start sm:px-3 text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/[0.04] hover:text-foreground sm:min-w-[190px]"
             >
 
               <Search
@@ -531,7 +528,7 @@ function Topbar({
               {/* NOTIFICATION DROPDOWN */}
               {notificationOpen && (
 
-                <div className="absolute right-0 top-12 w-[350px] overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
+                <div className="absolute right-0 top-12 w-[min(350px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
 
                   <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
 

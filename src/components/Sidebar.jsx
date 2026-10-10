@@ -22,9 +22,9 @@ function Sidebar({
     onLogout,
     collapsed,
     setCollapsed,
-    profile,
     mobileOpen = false,
-    onMobileClose,
+    setMobileOpen = () => {},
+    profile,
 }) {
     const [logoutOpen, setLogoutOpen] = useState(false)
 
@@ -118,7 +118,7 @@ function Sidebar({
 
     const navigateTo = (page) => {
         setActivePage(page)
-        onMobileClose?.()
+        setMobileOpen(false)
     }
 
     return (
@@ -127,31 +127,25 @@ function Sidebar({
             {/* SIDEBAR */}
             {/* ================================================= */}
 
-            {mobileOpen && (
-                <button
-                    type="button"
-                    aria-label="Close navigation menu"
-                    className="codesync-mobile-overlay"
-                    onClick={onMobileClose}
-                />
-            )}
-
             <aside
-                className={`codesync-sidebar ${mobileOpen ? "mobile-open" : ""}
+                className={`
                     fixed
                     left-0
                     top-0
                     z-[60]
                     flex
+                    transition-transform duration-200
+                    ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+                    md:translate-x-0
                     h-screen
                     flex-col
                     border-r
                     border-border
                     bg-background
-                    ${collapsed
-                        ? "w-[76px]"
-                        : "w-[240px]"
-                    }
+                    ${collapsed ? "md:w-[76px]" : "md:w-[240px]"}
+                    w-[min(280px,85vw)]
+                    h-[100dvh]
+                    md:h-screen
                 `}
             >
                 {/* ================================================= */}
@@ -160,16 +154,8 @@ function Sidebar({
 
                 <div
                     className={`
-                        flex
-                        h-[72px]
-                        shrink-0
-                        items-center
-                        border-b
-                        border-border
-                        ${collapsed
-                            ? "justify-center px-2"
-                            : "px-5"
-                        }
+                        flex h-[72px] shrink-0 items-center justify-between gap-2 border-b border-border
+                        ${collapsed ? "px-2 md:justify-center" : "px-4 md:px-5"}
                     `}
                 >
                     <button
@@ -226,6 +212,15 @@ function Sidebar({
                                 </p>
                             </div>
                         )}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setMobileOpen(false)}
+                        aria-label="Close navigation menu"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-secondary md:hidden"
+                    >
+                        <X size={18} />
                     </button>
                 </div>
 
@@ -645,8 +640,11 @@ function Sidebar({
                             : "Collapse sidebar"
                     }
                     className={`
+                        hidden
+                        md:flex
                         absolute
                         -right-3
+                        hidden md:flex
                         top-[58px]
                         z-[100]
                         flex
