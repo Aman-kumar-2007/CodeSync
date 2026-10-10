@@ -42,7 +42,7 @@ const app = express()
 
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://code-sync-kappa-green.vercel.app",
+    "https://code-sync-track.vercel.app",
 ]
 
 const corsOptions = {
