@@ -63,13 +63,13 @@ function PlatformCards({ profile }) {
 
     return (
         <section className="px-8 pt-7">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="dashboard-platform-grid grid grid-cols-1 gap-4 lg:grid-cols-3">
 
                 {/* ================================================= */}
                 {/* LEETCODE                                         */}
                 {/* ================================================= */}
 
-                <div className="h-[230px] rounded-2xl border border-[#f59e0b]/30 bg-card p-5">
+                <div className="dashboard-platform-card min-h-[230px] rounded-2xl border border-[#f59e0b]/30 bg-card p-5">
 
                     <div className="flex items-center justify-between">
 
@@ -195,7 +195,7 @@ function PlatformCards({ profile }) {
                 {/* CODEFORCES                                       */}
                 {/* ================================================= */}
 
-                <div className="h-[230px] rounded-2xl border border-[#2196f3]/30 bg-card p-5">
+                <div className="dashboard-platform-card min-h-[230px] rounded-2xl border border-[#2196f3]/30 bg-card p-5">
 
                     <div className="flex items-center justify-between">
 
@@ -232,7 +232,7 @@ function PlatformCards({ profile }) {
 
                     </div>
 
-                    <div className="mt-6 grid grid-cols-[190px_1fr] gap-12">
+                    <div className="dashboard-cf-metrics mt-6 grid grid-cols-[190px_1fr] gap-12">
 
                         <div>
 
@@ -306,7 +306,7 @@ function PlatformCards({ profile }) {
                 {/* GITHUB                                            */}
                 {/* ================================================= */}
 
-                <div className="h-[230px] rounded-2xl border border-emerald-500/30 bg-card p-5">
+                <div className="dashboard-platform-card min-h-[230px] rounded-2xl border border-emerald-500/30 bg-card p-5">
 
                     <div className="flex items-center justify-between">
 
@@ -343,7 +343,7 @@ function PlatformCards({ profile }) {
 
                     </div>
 
-                    <div className="mt-7 flex items-end justify-between gap-5">
+                    <div className="dashboard-github-metrics mt-7 flex items-end justify-between gap-5">
 
                         <div>
 

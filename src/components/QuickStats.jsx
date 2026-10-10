@@ -58,7 +58,7 @@ function QuickStats({ profile }) {
 
     return (
         <section className="px-8">
-            <div className="flex flex-wrap gap-3">
+            <div className="dashboard-quick-stats flex flex-wrap gap-3">
                 {stats.map((stat) => {
                     const Icon = stat.icon
 

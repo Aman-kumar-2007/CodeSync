@@ -335,7 +335,7 @@ function CodingHeatmap({
             </div>
 
             {/* Card */}
-            <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="dashboard-heatmap rounded-2xl border border-border bg-card p-6">
                 {/* Month Grid */}
                 <div className="grid grid-cols-12 gap-4.5 overflow-visible pb-3">
                     {loading ? (

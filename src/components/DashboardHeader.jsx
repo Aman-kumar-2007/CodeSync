@@ -126,12 +126,12 @@ function DashboardHeader({
                     "
                 />
 
-                <div className="relative flex h-full items-center justify-between px-7">
+                <div className="dashboard-hero relative flex h-full items-center justify-between px-7">
                     {/* Left */}
 
-                    <div className="flex h-full flex-col justify-between py-5">
+                    <div className="dashboard-hero-copy flex h-full min-w-0 flex-col justify-between py-5 pr-20">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight">
+                            <h1 className="dashboard-greeting text-2xl font-bold tracking-tight">
                                 {getGreeting()}, {name}.
                             </h1>
 
@@ -164,7 +164,7 @@ function DashboardHeader({
                         </p>
                     </div>
 
-                    <div className="absolute right-6 top-5 flex gap-2">
+                    <div className="dashboard-sync absolute right-6 top-5 flex gap-2">
 
                         <button
                             type="button"
