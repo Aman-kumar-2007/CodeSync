@@ -413,15 +413,16 @@ function CodingHeatmap({
                                                                             dayIndex
                                                                         }
                                                                         className="relative"
-                                                                        onMouseEnter={() =>
-                                                                            setHoveredDay(
-                                                                                {
-                                                                                    monthIndex,
-                                                                                    weekIndex,
-                                                                                    dayIndex,
-                                                                                }
-                                                                            )
-                                                                        }
+                                                                        onMouseEnter={(event) => {
+                                                                            const rect = event.currentTarget.getBoundingClientRect()
+                                                                            setHoveredDay({
+                                                                                monthIndex,
+                                                                                weekIndex,
+                                                                                dayIndex,
+                                                                                x: rect.left + rect.width / 2,
+                                                                                y: rect.top,
+                                                                            })
+                                                                        }}
                                                                         onMouseLeave={() =>
                                                                             setHoveredDay(
                                                                                 null
@@ -434,7 +435,16 @@ function CodingHeatmap({
 
                                                                         {/* Tooltip */}
                                                                         {isHovered && (
-                                                                            <div className="pointer-events-none absolute bottom-full left-1/2 z-[100] mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-slate-700 bg-[#171b27] px-3 py-2 text-white shadow-2xl">
+                                                                            <div
+                                                                                style={{
+                                                                                    position: "fixed",
+                                                                                    left: `${hoveredDay.x}px`,
+                                                                                    top: `${Math.max(72, hoveredDay.y - 8)}px`,
+                                                                                    transform: "translate(-50%, -100%)",
+                                                                                    zIndex: 9999,
+                                                                                }}
+                                                                                className="pointer-events-none whitespace-nowrap rounded-lg border border-slate-700 bg-[#171b27] px-3 py-2 text-white shadow-2xl"
+                                                                            >
                                                                                 <p className="text-[11px] font-semibold leading-4 text-white">
                                                                                     {formatDate(day.date)}
                                                                                 </p>

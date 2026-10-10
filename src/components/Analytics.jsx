@@ -159,8 +159,8 @@ function ChartTooltip({ active, payload, label }) {
     if (!active || !payload?.length) return null
 
     return (
-        <div className="rounded-xl border border-border bg-[#121722]/95 px-3 py-2 shadow-xl backdrop-blur-md">
-            <p className="mb-1.5 text-[9px] font-semibold text-muted-foreground">
+        <div className="rounded-xl border border-slate-700 bg-[#121722] px-3 py-2 text-white shadow-xl">
+            <p className="mb-1.5 text-[9px] font-semibold text-slate-300">
                 {label}
             </p>
 
@@ -169,7 +169,7 @@ function ChartTooltip({ active, payload, label }) {
                     key={item.dataKey}
                     className="flex items-center justify-between gap-5"
                 >
-                    <span className="text-[9px] text-muted-foreground">
+                    <span className="text-[9px] text-slate-300">
                         {item.name || item.dataKey}
                     </span>
 
@@ -284,10 +284,7 @@ function ActivityChart({ activity }) {
 
                         <Tooltip
                             content={<ChartTooltip />}
-                            cursor={{
-                                fill: "#1a2130",
-                                opacity: 0.5,
-                            }}
+                            cursor={false}
                         />
 
                         <Bar
