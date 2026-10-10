@@ -113,7 +113,7 @@ function CodingHeatmap({
         fetchActivity()
 
     }, [externalActivityData])
-    
+
     const months = useMemo(() => {
         const today = new Date()
 
@@ -347,125 +347,122 @@ function CodingHeatmap({
                     aria-label="Coding activity by month; scroll horizontally to view older months"
                 >
                     <div className="grid w-max min-w-[620px] grid-cols-12 gap-3 overflow-visible pb-3 sm:min-w-[760px] sm:gap-4">
-                    {loading ? (
-                        <div className="col-span-12 flex h-40 items-center justify-center text-sm text-muted-foreground">
-                            Loading activity...
-                        </div>
-                    ) : (
-                        months.map(
-                            (month, monthIndex) => (
-                                <div
-                                    key={`${month.name}-${month.year}`}
-                                    className="shrink-0"
-                                >
-                                    {/* Month Name */}
-                                    <p className="mb-3 text-center text-[11px] font-medium text-muted-foreground">
-                                        {month.name}
-                                    </p>
+                        {loading ? (
+                            <div className="col-span-12 flex h-40 items-center justify-center text-sm text-muted-foreground">
+                                Loading activity...
+                            </div>
+                        ) : (
+                            months.map(
+                                (month, monthIndex) => (
+                                    <div
+                                        key={`${month.name}-${month.year}`}
+                                        className="shrink-0"
+                                    >
+                                        {/* Month Name */}
+                                        <p className="mb-3 text-center text-[11px] font-medium text-muted-foreground">
+                                            {month.name}
+                                        </p>
 
-                                    {/* Month Grid */}
-                                    <div className="mx-auto grid w-fit grid-cols-5 gap-[6px]">
-                                        {month.weeks.map(
-                                            (
-                                                week,
-                                                weekIndex
-                                            ) => (
-                                                <div
-                                                    key={
-                                                        weekIndex
-                                                    }
-                                                    className="flex flex-col gap-[4px]"
-                                                >
-                                                    {week.map(
-                                                        (
-                                                            day,
-                                                            dayIndex
-                                                        ) => {
-                                                            if (
-                                                                !day
-                                                            ) {
+                                        {/* Month Grid */}
+                                        <div className="mx-auto grid w-fit grid-cols-5 gap-[6px]">
+                                            {month.weeks.map(
+                                                (
+                                                    week,
+                                                    weekIndex
+                                                ) => (
+                                                    <div
+                                                        key={
+                                                            weekIndex
+                                                        }
+                                                        className="flex flex-col gap-[4px]"
+                                                    >
+                                                        {week.map(
+                                                            (
+                                                                day,
+                                                                dayIndex
+                                                            ) => {
+                                                                if (
+                                                                    !day
+                                                                ) {
+                                                                    return (
+                                                                        <div
+                                                                            key={
+                                                                                dayIndex
+                                                                            }
+                                                                            className="h-[14px] w-[14px]"
+                                                                        />
+                                                                    )
+                                                                }
+
+                                                                const intensity =
+                                                                    getIntensity(
+                                                                        day.submissions
+                                                                    )
+
+                                                                const isHovered =
+                                                                    hoveredDay?.monthIndex ===
+                                                                    monthIndex &&
+                                                                    hoveredDay?.weekIndex ===
+                                                                    weekIndex &&
+                                                                    hoveredDay?.dayIndex ===
+                                                                    dayIndex
+
                                                                 return (
                                                                     <div
                                                                         key={
                                                                             dayIndex
                                                                         }
-                                                                        className="h-[14px] w-[14px]"
-                                                                    />
+                                                                        className="relative"
+                                                                        onMouseEnter={() =>
+                                                                            setHoveredDay(
+                                                                                {
+                                                                                    monthIndex,
+                                                                                    weekIndex,
+                                                                                    dayIndex,
+                                                                                }
+                                                                            )
+                                                                        }
+                                                                        onMouseLeave={() =>
+                                                                            setHoveredDay(
+                                                                                null
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <div
+                                                                            className={`h-[14px] w-[14px] cursor-pointer rounded-[3px] transition-all duration-150 hover:scale-110 hover:ring-1 hover:ring-foreground/40 ${intensityClasses[intensity]}`}
+                                                                        />
+
+                                                                        {/* Tooltip */}
+                                                                        {isHovered && (
+                                                                            <div className="pointer-events-none absolute bottom-full left-1/2 z-[100] mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-slate-700 bg-[#171b27] px-3 py-2 text-white shadow-2xl">
+                                                                                <p className="text-[11px] font-semibold leading-4 text-white">
+                                                                                    {formatDate(day.date)}
+                                                                                </p>
+
+                                                                                <p className="mt-0.5 text-[10px] leading-4 text-slate-300">
+                                                                                    {day.submissions === 0
+                                                                                        ? "No submissions"
+                                                                                        : `${day.submissions} ${day.submissions === 1
+                                                                                            ? "submission"
+                                                                                            : "submissions"
+                                                                                        }`}
+                                                                                </p>
+
+                                                                                <div className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 border-b border-r border-slate-700 bg-[#171b27]" />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 )
                                                             }
-
-                                                            const intensity =
-                                                                getIntensity(
-                                                                    day.submissions
-                                                                )
-
-                                                            const isHovered =
-                                                                hoveredDay?.monthIndex ===
-                                                                monthIndex &&
-                                                                hoveredDay?.weekIndex ===
-                                                                weekIndex &&
-                                                                hoveredDay?.dayIndex ===
-                                                                dayIndex
-
-                                                            return (
-                                                                <div
-                                                                    key={
-                                                                        dayIndex
-                                                                    }
-                                                                    className="relative"
-                                                                    onMouseEnter={() =>
-                                                                        setHoveredDay(
-                                                                            {
-                                                                                monthIndex,
-                                                                                weekIndex,
-                                                                                dayIndex,
-                                                                            }
-                                                                        )
-                                                                    }
-                                                                    onMouseLeave={() =>
-                                                                        setHoveredDay(
-                                                                            null
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <div
-                                                                        className={`h-[14px] w-[14px] cursor-pointer rounded-[3px] transition-all duration-150 hover:scale-110 hover:ring-1 hover:ring-foreground/40 ${intensityClasses[intensity]}`}
-                                                                    />
-
-                                                                    {/* Tooltip */}
-                                                                    {isHovered && (
-                                                                        <div className="pointer-events-none absolute bottom-full left-1/2 z-[100] mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-border bg-[#171b27] px-3 py-2 shadow-2xl">                                                                        <p className="text-[11px] font-semibold text-foreground">
-                                                                            {formatDate(
-                                                                                day.date
-                                                                            )}
-                                                                        </p>
-
-                                                                            <p className="mt-0.5 text-[10px] text-muted-foreground">
-                                                                                {day.submissions ===
-                                                                                    0
-                                                                                    ? "No submissions"
-                                                                                    : `${day.submissions} ${day.submissions ===
-                                                                                        1
-                                                                                        ? "submission"
-                                                                                        : "submissions"
-                                                                                    }`}
-                                                                            </p>
-
-                                                                            <div className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 border-b border-r border-border bg-[#171b27]" />
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )
-                                                        }
-                                                    )}
-                                                </div>
-                                            )
-                                        )}
+                                                        )}
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                )
                             )
-                        )
-                    )}
+                        )}
                     </div>
                 </div>
 
