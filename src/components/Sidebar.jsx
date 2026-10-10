@@ -128,7 +128,7 @@ function Sidebar({
     }
 
     const [avatarError, setAvatarError] = useState(false);
-    
+
     return (
         <>
             {/* ================================================= */}
@@ -753,25 +753,28 @@ function Sidebar({
                         <div className="p-5">
                             <div className="rounded-xl border border-border bg-secondary/40 p-4">
                                 <div className="flex items-center gap-3">
-                                    <div
-                                        className="
-                                            flex
-                                            h-10
-                                            w-10
-                                            shrink-0
-                                            items-center
-                                            justify-center
-                                            rounded-full
-                                            bg-gradient-to-br
-                                            from-indigo-500
-                                            to-violet-600
-                                            text-xs
-                                            font-bold
-                                            text-white
-                                        "
-                                    >
-                                        {initials}
+
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
+                                        {(() => {
+                                            const avatarUrl =
+                                                profile?.avatar ||
+                                                profile?.profile_image ||
+                                                profile?.avatar_url ||
+                                                profile?.profileImage;
+
+                                            return avatarUrl && !avatarError ? (
+                                                <img
+                                                    src={avatarUrl}
+                                                    alt={displayName}
+                                                    className="h-full w-full object-cover"
+                                                    onError={() => setAvatarError(true)}
+                                                />
+                                            ) : (
+                                                initials
+                                            );
+                                        })()}
                                     </div>
+
 
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
