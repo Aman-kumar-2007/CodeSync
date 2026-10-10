@@ -306,97 +306,44 @@ function PlatformCards({ profile }) {
                 {/* GITHUB                                            */}
                 {/* ================================================= */}
 
-                <div className="min-h-[230px] min-w-0 rounded-2xl border border-emerald-500/30 bg-card p-4 sm:p-5">
+                <div className="mt-7 grid grid-cols-1 gap-6 sm:grid-cols-[auto_1fr] sm:items-end sm:gap-5">
 
-                    <div className="flex items-center justify-between">
+                    {/* Contributions */}
+                    <div className="min-w-0">
+                        <p className="font-mono text-5xl font-bold leading-none sm:text-5xl">
+                            {github.contributions ?? 0}
+                        </p>
 
-                        <div className="flex items-center gap-3">
-
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
-                                <GitBranch
-                                    size={24}
-                                    strokeWidth={2}
-                                />
-                            </div>
-
-                            <h3 className="text-lg font-bold text-emerald-400">
-                                GitHub
-                            </h3>
-
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                openProfile(
-                                    github.profileUrl
-                                )
-                            }
-                            disabled={
-                                !github.profileUrl
-                            }
-                            className="flex items-center gap-1.5 text-sm font-semibold text-emerald-400 transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            View Profile
-                            <ExternalLink size={15} />
-                        </button>
-
+                        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+                            Contributions
+                        </p>
                     </div>
 
-                    <div className="mt-7 flex items-end justify-between gap-4 sm:p-5">
+                    {/* Repository chart and count */}
+                    <div className="min-w-0 w-full">
+                        <div className="flex h-[80px] w-full items-end gap-1 overflow-hidden sm:max-w-full">
 
-                        <div>
-
-                            <p className="font-mono text-5xl font-bold">
-                                {github.contributions ??
-                                    0}
-                            </p>
-
-                            <p className="mt-2 text-sm text-muted-foreground">
-                                Contributions
-                            </p>
-
-                        </div>
-
-                        <div className="flex flex-1 flex-col items-end">
-
-                            <div className="flex h-[80px] max-w-full items-end gap-1 overflow-hidden">
-
-                                {[
-                                    18, 28, 42, 35, 55,
-                                    48, 62, 51, 44, 58,
-                                    68, 52, 72, 60, 78,
-                                    65, 82, 57, 70, 88,
-                                ].map(
-                                    (
-                                        height,
-                                        index
-                                    ) => (
-                                        <div
-                                            key={index}
-                                            className="w-[7px] min-w-[4px] flex-1 rounded-t-sm bg-emerald-500/80"
-                                            style={{
-                                                height: `${height}%`,
-                                            }}
-                                        />
-                                    )
-                                )}
-
-                            </div>
-
-                            <p className="mt-4 text-sm text-muted-foreground">
-
-                                Total Repositories{" "}
-
-                                <span className="font-mono font-bold text-foreground">
-                                    {github.repositories ??
-                                        0}
-                                </span>
-
-                            </p>
+                            {[
+                                18, 28, 42, 35, 55,
+                                48, 62, 51, 44, 58,
+                                68, 52, 72, 60, 78,
+                                65, 82, 57, 70, 88,
+                            ].map((height, index) => (
+                                <div
+                                    key={index}
+                                    className="min-w-0 flex-1 rounded-t-sm bg-emerald-500/80"
+                                    style={{ height: `${height}%` }}
+                                />
+                            ))}
 
                         </div>
 
+                        <p className="mt-4 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-sm text-muted-foreground sm:text-base">
+                            <span>Total Repositories</span>
+                            <span className="font-mono font-bold text-foreground">
+                                {github.repositories ?? 0}
+                            </span>
+                        </p>
                     </div>
 
                 </div>
